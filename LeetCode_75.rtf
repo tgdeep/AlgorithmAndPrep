@@ -16,21 +16,20 @@
 \pard\pardeftab720\partightenfactor0
 
 \f1\fs26 \cf2 \cb3 \expnd0\expndtw0\kerning0
-\outl0\strokewidth0 \strokec2 class\cf0 \strokec4  \cf5 \strokec5 Solution\cf0 \strokec4  \{\cb1 \
-\pard\pardeftab720\partightenfactor0
-\cf0 \cb3     \cf2 \strokec2 func\cf0 \strokec4  \cf6 \strokec6 deleteMiddle\cf0 \strokec4 (\cf6 \strokec6 _\cf0 \strokec4  \cf7 \strokec7 head\cf0 \strokec4 : ListNode?) -> ListNode? \{\cb1 \
-\cb3         \cf2 \strokec2 let\cf0 \strokec4  dummy = \cf6 \strokec6 ListNode\cf0 \strokec4 (\cf8 \strokec8 0\cf0 \strokec4 , head)\cb1 \
+class\cf0  \cf5 Solution\cf0  \{\cb1 \
+\cb3     \cf2 func\cf0  \cf6 deleteMiddle\cf0 (\cf6 _\cf0  \cf7 head\cf0 : ListNode?) -> ListNode? \{\cb1 \
+\cb3         \cf2 let\cf0  dummy = \cf6 ListNode\cf0 (\cf8 0\cf0 , head)\cb1 \
 \
-\cb3         \cf2 \strokec2 var\cf0 \strokec4  slow: ListNode? = dummy\cb1 \
-\cb3         \cf2 \strokec2 var\cf0 \strokec4  fast = slow?.\cf7 \strokec7 next\cf0 \cb1 \strokec4 \
+\cb3         \cf2 var\cf0  slow: ListNode? = dummy\cb1 \
+\cb3         \cf2 var\cf0  fast = slow?.\cf7 next\cf0 \cb1 \
 \
-\cb3         \cf9 \strokec9 while\cf0 \strokec4  \cf2 \strokec2 let\cf0 \strokec4  next = fast?.\cf7 \strokec7 next\cf0 \strokec4  \{\cb1 \
-\cb3             slow = slow?.\cf7 \strokec7 next\cf0 \cb1 \strokec4 \
-\cb3             fast = next.\cf7 \strokec7 next\cf0 \cb1 \strokec4 \
+\cb3         \cf9 while\cf0  \cf2 let\cf0  next = fast?.\cf7 next\cf0  \{\cb1 \
+\cb3             slow = slow?.\cf7 next\cf0 \cb1 \
+\cb3             fast = next.\cf7 next\cf0 \cb1 \
 \cb3         \}\cb1 \
 \
-\cb3         slow?.\cf7 \strokec7 next\cf0 \strokec4  = slow?.\cf7 \strokec7 next\cf0 \strokec4 ?.\cf7 \strokec7 next\cf0 \cb1 \strokec4 \
-\cb3         \cf9 \strokec9 return\cf0 \strokec4  dummy.\cf7 \strokec7 next\cf0 \cb1 \strokec4 \
+\cb3         slow?.\cf7 next\cf0  = slow?.\cf7 next\cf0 ?.\cf7 next\cf0 \cb1 \
+\cb3         \cf9 return\cf0  dummy.\cf7 next\cf0 \cb1 \
 \cb3     \cb1 \
 \cb3     \}\cb1 \
 \cb3 \}\cb1 \
@@ -40,41 +39,43 @@
 2. Odd Even Linked List\
 \
 \
-\pard\pardeftab720\partightenfactor0
-\cf2 \cb3 \strokec2 class\cf0 \strokec4  \cf5 \strokec5 Solution\cf0 \strokec4  \{\cb1 \
-\pard\pardeftab720\partightenfactor0
-\cf0 \cb3     \cf2 \strokec2 func\cf0 \strokec4  \cf6 \strokec6 oddEvenList\cf0 \strokec4 (\cf6 \strokec6 _\cf0 \strokec4  \cf7 \strokec7 head\cf0 \strokec4 : ListNode?) -> ListNode? \{\cb1 \
-\cb3         \cf2 \strokec2 let\cf0 \strokec4  oddHead = head ,  evenHead = head?.\cf7 \strokec7 next\cf0 \cb1 \strokec4 \
+\cf2 \cb3 class\cf0  \cf5 Solution\cf0  \{\cb1 \
+\cb3     \cf2 func\cf0  \cf6 oddEvenList\cf0 (\cf6 _\cf0  \cf7 head\cf0 : ListNode?) -> ListNode? \{\cb1 \
+\cb3         \cf2 let\cf0  oddHead = head ,  evenHead = head?.\cf7 next\cf0 \cb1 \
 \
-\cb3         \cf2 \strokec2 var\cf0 \strokec4  oddTail = oddHead , evenTail = evenHead\cb1 \
+\cb3         \cf2 var\cf0  oddTail = oddHead , evenTail = evenHead\cb1 \
 \
-\cb3         \cf2 \strokec2 var\cf0 \strokec4  current = evenHead?.\cf7 \strokec7 next\cf0 \strokec4 , even = \cf2 \strokec2 false\cf0 \cb1 \strokec4 \
-\cb3         \cf9 \strokec9 while\cf0 \strokec4  current != \cf2 \strokec2 nil\cf0 \strokec4  \{\cb1 \
+\cb3         \cf2 var\cf0  current = evenHead?.\cf7 next\cf0 , even = \cf2 false\cf0 \cb1 \
+\cb3         \cf9 while\cf0  current != \cf2 nil\cf0  \{\cb1 \
 \cb3            \cb1 \
-\cb3             \cf9 \strokec9 if\cf0 \strokec4  even\{\cb1 \
-\cb3                 evenTail!.\cf7 \strokec7 next\cf0 \strokec4  = current\cb1 \
+\cb3             \cf9 if\cf0  even\{\cb1 \
+\cb3                 evenTail!.\cf7 next\cf0  = current\cb1 \
 \cb3                 evenTail = current\cb1 \
 \cb3             \}\cb1 \
 \
-\cb3             \cf9 \strokec9 else\cf0 \strokec4 \{\cb1 \
-\cb3                oddTail!.\cf7 \strokec7 next\cf0 \strokec4  = current\cb1 \
+\cb3             \cf9 else\cf0 \{\cb1 \
+\cb3                oddTail!.\cf7 next\cf0  = current\cb1 \
 \cb3                oddTail = current\cb1 \
 \
 \cb3             \}\cb1 \
 \
-\cb3             current = current!.\cf7 \strokec7 next\cf0 \cb1 \strokec4 \
-\cb3             even.\cf6 \strokec6 toggle\cf0 \strokec4 ()\cb1 \
+\cb3             current = current!.\cf7 next\cf0 \cb1 \
+\cb3             even.\cf6 toggle\cf0 ()\cb1 \
 \
 \cb3         \}\cb1 \
 \
-\cb3         \cf10 \cb3 \strokec10 // connect the odd and Even\cf0 \cb1 \strokec4 \
-\cb3         oddTail?.\cf7 \strokec7 next\cf0 \strokec4  = evenHead\cb1 \
-\cb3         evenTail?.\cf7 \strokec7 next\cf0 \strokec4  = \cf2 \strokec2 nil\cf0 \cb1 \strokec4 \
+\cb3         \cf10 // connect the odd and Even\cf0 \cb1 \
+\cb3         oddTail?.\cf7 next\cf0  = evenHead\cb1 \
+\cb3         evenTail?.\cf7 next\cf0  = \cf2 nil\cf0 \cb1 \
 \
 \
-\cb3         \cf9 \strokec9 return\cf0 \strokec4  oddHead\cb1 \
+\cb3         \cf9 return\cf0  oddHead\cb1 \
 \
 \
 \cb3     \}\cb1 \
-\cb3 \}\cb1 \
+\cb3 \}\
+\
+\
+\
+3. \cb1 \
 }
