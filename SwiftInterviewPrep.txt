@@ -1,0 +1,148 @@
+🔹 1. SwiftUI Fundamentals (Must-Know)
+❓ Is SwiftUI declarative or imperative?
+
+SwiftUI is declarative
+
+You describe what the UI should look like for a given state
+
+SwiftUI decides how to update the UI
+
+Key Insight:
+
+State drives UI, not the other way around.
+
+❓ What is body in SwiftUI?
+
+body is a computed property
+
+It can be recomputed many times
+
+Recompute ≠ View recreation
+
+📁 Demo:
+
+ViewRecreationBodyRecomputeView.swift
+
+🔹 2. View Identity & Lifecycle (Very Important)
+❓ Why does @State reset sometimes?
+
+@State is tied to view identity
+
+Changing .id() creates a new view
+
+New identity → fresh state
+
+📁 Demo:
+
+ViewIdentityAndIdView.swift
+
+❓ Is SwiftUI View a class or struct?
+
+SwiftUI Views are structs
+
+They are value types
+
+Cheap to recreate
+
+Interview Tip:
+
+SwiftUI recreates views freely but preserves state via identity.
+
+🔹 3. Navigation & State Reset (Tricky Topic)
+❓ Why does state reset when navigating back?
+
+NavigationStack recreates views
+
+Identity comes from path values
+
+Popping removes view & its state
+
+📁 Demo:
+
+NavigationStackIdentityResetView.swift
+
+🔹 4. Property Wrappers (High-Frequency Questions)
+❓ Difference between @State, @StateObject, @ObservedObject
+Wrapper	Purpose
+@State	Local value-type state
+@StateObject	Owns reference-type state
+@ObservedObject	Observes externally owned state
+
+📁 Demo:
+
+StateObjectVsObservedObjectView.swift
+
+❓ Why was @StateObject introduced?
+
+@ObservedObject recreates ViewModel on redraw
+
+@StateObject preserves ownership
+
+Prevents repeated API calls
+
+🔹 5. Async & Concurrency (Modern SwiftUI)
+❓ .task {} vs .onAppear {}
+.task	.onAppear
+Lifecycle-aware	Lifecycle-agnostic
+Auto-cancelled	Not cancelled
+Structured concurrency	Manual handling
+
+📁 Demo:
+
+TaskVsOnAppearView.swift
+
+🔹 6. some View & Type System (Advanced)
+❓ What does some View mean?
+
+It is an opaque return type
+
+Compiler chooses one concrete type
+
+All return paths must match
+
+📁 Demo:
+
+OpaqueReturnTypeSomeView.swift
+
+
+Interview Gold Line:
+
+some View does NOT mean “any view”.
+
+🔹 7. @ViewBuilder & Compiler Errors
+❓ Why do large SwiftUI views fail to compile?
+
+@ViewBuilder expands into tuple types
+
+There is a hard limit on tuple size
+
+Too many views → compiler explosion
+
+📁 Demo:
+
+ViewBuilderExplosionView.swift
+
+🔹 8. Environment vs EnvironmentObject (Architecture)
+❓ @Environment vs @EnvironmentObject
+@Environment	@EnvironmentObject
+Value-based	Reference-based
+System-provided	App-provided
+Safe	Crashes if missing
+Read-only intent	Shared mutable state
+
+📁 Demo:
+
+EnvironmentVsEnvironmentObjectView.swift
+
+🔹 9. Child → Parent Communication (Advanced Layout)
+❓ How does a child view talk to a parent?
+
+Use PreferenceKey
+
+No callbacks or bindings
+
+Common in layout measurement
+
+📁 Demo:
+
+ChildToParentPreferenceKeyView.swift
