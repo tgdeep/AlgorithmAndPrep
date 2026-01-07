@@ -1,0 +1,176 @@
+🔁 SwiftUI vs UIKit – Interview Comparison
+
+This section compares SwiftUI and UIKit from a design, architecture, and mental-model perspective, not just syntax differences.
+
+
+1️⃣ Programming Paradigm
+SwiftUI	UIKit
+Declarative	Imperative
+UI is a function of state	UI updated via events
+Framework decides updates	Developer manages updates
+
+
+Interview line:
+
+In SwiftUI, we describe what the UI should look like for a given state, not how to update it.
+
+
+2️⃣ View Types & Memory Model
+SwiftUI	UIKit
+struct (value type)	class (reference type)
+Cheap to recreate	Expensive to recreate
+Identity managed by framework	Identity = object reference
+
+Key Insight:
+
+SwiftUI recreates views freely, but preserves state using identity.
+
+
+3️⃣ State Management
+SwiftUI	UIKit
+@State	Stored properties
+@StateObject	Strong ViewModel reference
+@ObservedObject	Delegates / observers
+Auto UI refresh	Manual UI updates
+
+
+UIKit
+
+label.text = viewModel.title
+
+
+SwiftUI
+
+Text(viewModel.title)
+
+
+4️⃣ Lifecycle Management
+SwiftUI	UIKit
+body recomputed often	viewDidLoad once
+Lifecycle is implicit	Lifecycle is explicit
+State-driven	Event-driven
+
+Interview tip:
+
+SwiftUI lifecycle is data-driven, not callback-driven.
+
+5️⃣ Navigation
+SwiftUI	UIKit
+NavigationStack	UINavigationController
+Value-based navigation	Object-based navigation
+Identity via path values	Identity via controller instance
+
+Important:
+
+Popping a view removes its identity → state resets.
+
+
+
+6️⃣ Layout System
+SwiftUI	UIKit
+Constraint-free	Auto Layout constraints
+Layout flows top → down	Constraints resolve bidirectionally
+Composition-based	Relationship-based
+
+SwiftUI
+
+VStack {
+    Text("Hello")
+}
+
+UIKit
+
+NSLayoutConstraint.activate([...])
+
+
+7️⃣ Composition & Reuse
+SwiftUI	UIKit
+View composition	View inheritance
+Small reusable views	Large ViewControllers
+Easy refactoring	Risky refactoring
+
+Key Idea:
+
+SwiftUI favors composition over inheritance.
+
+
+8️⃣ Dependency Injection
+SwiftUI	UIKit
+@Environment	App / Scene delegate
+@EnvironmentObject	Singleton / DI container
+Implicit injection	Explicit wiring
+
+⚠️ EnvironmentObject crashes if not injected.
+
+
+9️⃣ Performance Model
+SwiftUI	UIKit
+Diffing engine	Direct mutations
+Static dispatch (some View)	Dynamic dispatch
+Optimized redraws	Manual optimization
+
+Interview line:
+
+SwiftUI trades imperative control for predictable diff-based rendering.
+
+
+🔟 Concurrency & Async Work
+SwiftUI	UIKit
+.task {}	viewDidAppear
+Structured concurrency	Callbacks / delegates
+Auto cancellation	Manual cancellation
+
+Key Takeaway:
+
+.task respects view lifecycle; onAppear does not.
+
+
+⚠️ Common Pitfalls
+SwiftUI
+
+State resets due to identity change
+
+Missing EnvironmentObject
+
+Heavy work inside body
+
+ViewBuilder compiler explosions
+
+UIKit
+
+Retain cycles
+
+Constraint conflicts
+
+Threading issues
+
+Lifecycle misuse
+
+
+🧠 When to Use What (Interview Answer)
+Prefer SwiftUI when:
+
+Building new screens
+
+State-driven UI
+
+Rapid iteration
+
+Modern concurrency is needed
+
+Prefer UIKit when:
+
+Fine-grained lifecycle control is required
+
+Legacy codebase
+
+Highly custom animations
+
+Advanced text / layout edge cases
+
+
+⭐ Strong Closing Statement
+
+SwiftUI simplifies UI development by shifting complexity
+from view controllers to state, identity, and data flow.
+
