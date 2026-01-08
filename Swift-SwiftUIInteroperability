@@ -1,0 +1,195 @@
+🔄 SwiftUI + UIKit Interoperability
+
+SwiftUI and UIKit are not competitors — they are designed to work together.
+Most real-world apps today are hybrid.
+
+This section shows practical, interview-relevant interoperability patterns.
+
+1️⃣ Embedding a UIKit ViewController in SwiftUI
+(UIViewControllerRepresentable)
+
+Use this when:
+
+You already have a UIKit screen
+
+You need advanced APIs (camera, map, text rendering)
+
+import SwiftUI
+import UIKit
+
+struct LegacyViewControllerWrapper: UIViewControllerRepresentable {
+
+    func makeUIViewController(context: Context) -> UIViewController {
+        let vc = UIViewController()
+        vc.view.backgroundColor = .systemBlue
+        return vc
+    }
+
+    func updateUIViewController(
+        _ uiViewController: UIViewController,
+        context: Context
+    ) {
+        // Update UIKit view when SwiftUI state changes
+    }
+}
+
+
+Usage in SwiftUI
+
+struct ContentView: View {
+    var body: some View {
+        LegacyViewControllerWrapper()
+    }
+}
+
+2️⃣ Embedding a UIKit View in SwiftUI
+(UIViewRepresentable)
+
+Use this for:
+
+Custom UIKit controls
+
+Third-party SDK views
+
+struct LegacyLabel: UIViewRepresentable {
+
+    func makeUIView(context: Context) -> UILabel {
+        let label = UILabel()
+        label.text = "UIKit Label inside SwiftUI"
+        label.textAlignment = .center
+        return label
+    }
+
+    func updateUIView(_ uiView: UILabel, context: Context) {
+        // Respond to SwiftUI state changes
+    }
+}
+
+3️⃣ Embedding SwiftUI in UIKit
+(UIHostingController)
+
+Use this when:
+
+Migrating UIKit → SwiftUI
+
+Gradually adopting SwiftUI
+
+import SwiftUI
+
+let swiftUIView = Text("SwiftUI inside UIKit")
+let hostingController = UIHostingController(rootView: swiftUIView)
+
+// Push or present like a normal UIViewController
+navigationController?.pushViewController(hostingController, animated: true)
+
+4️⃣ Passing Data from SwiftUI → UIKit
+
+SwiftUI → UIKit uses bindings or closures.
+
+struct UIKitWrapper: UIViewControllerRepresentable {
+
+    @Binding var title: String
+
+    func makeUIViewController(context: Context) -> UIViewController {
+        UIViewController()
+    }
+
+    func updateUIViewController(
+        _ uiViewController: UIViewController,
+        context: Context
+    ) {
+        uiViewController.title = title
+    }
+}
+
+5️⃣ Passing Events from UIKit → SwiftUI
+(Coordinator Pattern)
+struct ButtonWrapper: UIViewRepresentable {
+
+    var onTap: () -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onTap: onTap)
+    }
+
+    func makeUIView(context: Context) -> UIButton {
+        let button = UIButton(type: .system)
+        button.setTitle("UIKit Button", for: .normal)
+        button.addTarget(
+            context.coordinator,
+            action: #selector(Coordinator.tap),
+            for: .touchUpInside
+        )
+        return button
+    }
+
+    func updateUIView(_ uiView: UIButton, context: Context) {}
+
+    class Coordinator {
+        let onTap: () -> Void
+        init(onTap: @escaping () -> Void) {
+            self.onTap = onTap
+        }
+
+        @objc func tap() {
+            onTap()
+        }
+    }
+}
+
+6️⃣ Sharing ViewModels Between SwiftUI & UIKit
+
+SwiftUI and UIKit can share the same ViewModel.
+
+final class SharedViewModel: ObservableObject {
+    @Published var title: String = "Hello"
+}
+
+
+SwiftUI
+
+@StateObject var viewModel = SharedViewModel()
+Text(viewModel.title)
+
+
+UIKit
+
+let viewModel = SharedViewModel()
+viewModel.$title.sink { print($0) }
+
+7️⃣ Environment & UIKit
+
+UIKit does not understand SwiftUI’s @Environment.
+
+You must pass values manually.
+
+UIHostingController(
+    rootView: ContentView()
+        .environment(\.colorScheme, .dark)
+)
+
+⚠️ Common Interoperability Pitfalls
+
+❌ Expecting UIKit lifecycle callbacks in SwiftUI
+
+❌ Using UIViewControllerRepresentable for everything
+
+❌ Overusing AnyView as a bridge
+
+❌ Forgetting coordinators for delegate callbacks
+
+🧠 Interview Power Statement
+
+SwiftUI and UIKit are complementary.
+SwiftUI excels at state-driven UI, while UIKit is still essential for
+advanced lifecycle control and legacy integrations.
+
+⭐ Best Practice
+
+New screens → SwiftUI
+
+Legacy / complex screens → UIKit
+
+Migration → UIHostingController
+
+Custom views → UIViewRepresentable
