@@ -1,0 +1,231 @@
+🚫 SwiftUI Anti-Patterns (What NOT to Do)
+
+SwiftUI is powerful, but many issues come from UIKit habits carried forward.
+Avoiding these anti-patterns prevents state bugs, performance issues, and crashes.
+
+1️⃣ Doing Work Inside body
+❌ Anti-Pattern
+var body: some View {
+    fetchData()
+    return Text("Hello")
+}
+
+💥 Why It’s Bad
+
+body is recomputed frequently
+
+Causes repeated API calls
+
+Leads to performance issues
+
+✅ Correct
+.task {
+    await fetchData()
+}
+
+2️⃣ Treating SwiftUI Views Like Objects
+❌ Anti-Pattern
+struct MyView: View {
+    var counter = 0
+}
+
+💥 Why It’s Bad
+
+Views are value types
+
+State resets on redraw
+
+✅ Correct
+@State private var counter = 0
+
+3️⃣ Creating ViewModels with @ObservedObject
+❌ Anti-Pattern
+@ObservedObject var viewModel = MyViewModel()
+
+💥 Why It’s Bad
+
+ViewModel recreated on every view redraw
+
+API calls repeat
+
+State lost
+
+✅ Correct
+@StateObject var viewModel = MyViewModel()
+
+4️⃣ Using .id(UUID()) to “Fix” UI Issues
+❌ Anti-Pattern
+.someView()
+.id(UUID())
+
+💥 Why It’s Bad
+
+Forces view recreation every render
+
+Resets all @State
+
+Breaks animations
+
+✅ Correct
+
+Use .id() only when you intentionally want a reset.
+
+5️⃣ Overusing AnyView
+❌ Anti-Pattern
+var content: AnyView {
+    if condition {
+        return AnyView(Text("A"))
+    } else {
+        return AnyView(Image(systemName: "xmark"))
+    }
+}
+
+💥 Why It’s Bad
+
+Loses type safety
+
+Slower diffing
+
+Hides design issues
+
+✅ Correct
+
+Use Group
+
+Extract subviews
+
+Align return types
+
+6️⃣ Large Monolithic body Implementations
+❌ Anti-Pattern
+var body: some View {
+    VStack {
+        // hundreds of lines
+    }
+}
+
+💥 Why It’s Bad
+
+Compiler errors (ViewBuilder explosion)
+
+Poor diffing
+
+Hard to maintain
+
+✅ Correct
+var body: some View {
+    VStack {
+        header
+        content
+        footer
+    }
+}
+
+7️⃣ Expecting Navigation to Preserve State
+❌ UIKit Assumption
+
+“Pushing and popping keeps state”
+
+💥 SwiftUI Reality
+
+NavigationStack recreates views
+
+State resets if identity changes
+
+✅ Correct
+
+Lift state up
+
+Use stable path values
+
+Store state in ViewModels
+
+8️⃣ Forgetting to Inject EnvironmentObject
+❌ Anti-Pattern
+@EnvironmentObject var session: UserSession
+
+💥 Crash
+No ObservableObject of type UserSession found
+
+✅ Correct
+.environmentObject(UserSession())
+
+
+Injected once at the root.
+
+9️⃣ Assuming onAppear Runs Once
+❌ Anti-Pattern
+.onAppear {
+    loadData()
+}
+
+💥 Why It’s Bad
+
+Can run multiple times
+
+No cancellation support
+
+✅ Correct
+.task {
+    await loadData()
+}
+
+🔟 Hard-Coding Layout Sizes Everywhere
+❌ Anti-Pattern
+.frame(width: 200, height: 50)
+
+💥 Why It’s Bad
+
+Breaks dynamic type
+
+Poor adaptability
+
+Fails on different devices
+
+✅ Correct
+
+Let layout flow naturally
+
+Use alignment & spacing
+
+Use GeometryReader sparingly
+
+🔥 Biggest SwiftUI Anti-Pattern (Summary)
+
+Treating SwiftUI like UIKit with better syntax.
+
+SwiftUI requires:
+
+Thinking in state
+
+Understanding identity
+
+Embracing value semantics
+
+Trusting the framework
+
+🧠 Interview Power Answer
+
+If asked:
+
+“What are common SwiftUI mistakes?”
+
+Say:
+
+“Most issues come from misunderstanding view identity, misusing property wrappers, and doing work inside body.”
+
+⭐ Golden Rule Checklist
+
+❌ No logic in body
+
+❌ No UUID() for identity
+
+❌ No ObservedObject ownership
+
+❌ No heavy modifiers everywhere
+
+✅ Stable identity
+
+✅ Owned ViewModels
+
+✅ Small composable views
