@@ -1,0 +1,189 @@
+🛠️ SwiftUI Debugging Checklist
+
+SwiftUI bugs are rarely random — they usually come from state, identity, or lifecycle misunderstandings.
+Use this checklist before assuming SwiftUI is broken.
+
+✅ 1. Is body Being Recomputed Too Often?
+🔍 Debug
+var body: some View {
+    print("🔄 body recomputed")
+    return Text("Hello")
+}
+
+✔️ Expected
+
+Prints multiple times
+
+This is normal
+
+❌ Red Flag
+
+Heavy work inside body
+
+✅ 2. Did My View Lose Its Identity?
+🔍 Ask Yourself
+
+Did I change .id()?
+
+Did navigation path values change?
+
+Did ForEach identity change?
+
+❌ Common Bug
+.id(UUID())
+
+✔️ Fix
+
+Use stable IDs
+
+Tie identity to real data
+
+✅ 3. Is @State Resetting Unexpectedly?
+🔍 Check
+
+Is the view being recreated?
+
+Is identity stable?
+
+Is state owned by the correct view?
+
+✔️ Fix
+
+Lift state up
+
+Move logic into a ViewModel
+
+✅ 4. Am I Using the Correct Property Wrapper?
+Symptom	Likely Cause
+API called repeatedly	@ObservedObject misuse
+State resets	Missing @StateObject
+UI not updating	Missing @Published
+Massive redraws	Overused @EnvironmentObject
+✅ 5. Is Async Work Tied to Lifecycle Correctly?
+❌ Bug
+.onAppear {
+    loadData()
+}
+
+✔️ Fix
+.task {
+    await loadData()
+}
+
+🔍 Debug Tip
+
+Navigate back early
+
+See if work cancels
+
+✅ 6. Did I Forget an EnvironmentObject Injection?
+❌ Crash
+No ObservableObject of type X found
+
+✔️ Fix
+.environmentObject(MyObject())
+
+
+Injected once at the root.
+
+✅ 7. Is ForEach Identity Stable?
+❌ Bug
+ForEach(items, id: \.self)
+
+✔️ Fix
+ForEach(items, id: \.id)
+
+🔍 Debug Tip
+
+Watch for full list redraws
+
+Animations breaking
+
+✅ 8. Is the Compiler Error a ViewBuilder Explosion?
+❌ Error
+Result builder cannot build expression
+
+✔️ Fix
+
+Extract subviews
+
+Use Group
+
+Reduce body size
+
+✅ 9. Am I Overusing AnyView?
+❌ Symptom
+
+Slower UI
+
+Lost type safety
+
+Harder debugging
+
+✔️ Fix
+
+Use Group
+
+Align return types
+
+Extract views
+
+✅ 10. Is Navigation Resetting State?
+🔍 Debug
+
+Pop and push the screen
+
+Does state reset?
+
+✔️ Explanation
+
+NavigationStack recreates views
+
+Identity comes from path values
+
+✔️ Fix
+
+Lift state
+
+Use stable navigation data
+
+✅ 11. Is the Bug Actually Layout-Related?
+🔍 Check
+
+Hard-coded frames
+
+GeometryReader misuse
+
+Nested stacks
+
+✔️ Fix
+
+Let layout flow
+
+Remove fixed sizes
+
+Simplify hierarchy
+
+✅ 12. Use SwiftUI Debug Tools
+🛠️ Tools
+
+Xcode → Debug View Hierarchy
+
+Instruments → SwiftUI
+
+Console logs (init, body)
+
+🔥 SwiftUI Debugging Golden Rule
+
+If something resets, flickers, or re-runs,
+check identity first — not state.
+
+🧠 Interview Power Answer
+
+If asked:
+
+“How do you debug SwiftUI issues?”
+
+Say:
+
+“I start by checking view identity, state ownership, and body recomputation. Most SwiftUI bugs come from identity changes or incorrect property wrapper usage.”
