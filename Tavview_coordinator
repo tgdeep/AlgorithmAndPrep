@@ -1,0 +1,200 @@
+📑 SwiftUI TabView + Coordinator Architecture
+
+In real apps, TabView introduces multiple navigation stacks.
+A proper coordinator setup avoids:
+
+State leakage across tabs
+
+Broken back stacks
+
+Navigation chaos
+
+This pattern keeps each tab isolated and predictable.
+
+🧠 Core Idea
+TabCoordinator
+ ├─ HomeCoordinator → NavigationStack
+ ├─ SearchCoordinator → NavigationStack
+ └─ ProfileCoordinator → NavigationStack
+
+
+✅ Each tab owns its own navigation stack
+✅ Navigation state survives tab switching
+✅ Deep linking becomes manageable
+
+📁 Recommended Structure
+App/
+ ├─ TabCoordinator.swift
+ ├─ TabRoute.swift
+ └─ RootTabView.swift
+Features/
+ ├─ Home/
+ ├─ Search/
+ └─ Profile/
+
+1️⃣ Define Tabs
+enum AppTab: Hashable {
+    case home
+    case search
+    case profile
+}
+
+2️⃣ Define Routes Per Tab
+enum HomeRoute: Hashable {
+    case details(id: String)
+}
+
+enum SearchRoute: Hashable {
+    case result(query: String)
+}
+
+enum ProfileRoute: Hashable {
+    case settings
+}
+
+3️⃣ Tab Coordinator (Top-Level Owner)
+import SwiftUI
+
+@MainActor
+final class TabCoordinator: ObservableObject {
+
+    @Published var selectedTab: AppTab = .home
+
+    // Separate navigation paths per tab
+    @Published var homePath: [HomeRoute] = []
+    @Published var searchPath: [SearchRoute] = []
+    @Published var profilePath: [ProfileRoute] = []
+
+    func switchTab(_ tab: AppTab) {
+        selectedTab = tab
+    }
+}
+
+
+✅ One coordinator
+✅ Multiple navigation states
+✅ Explicit control
+
+4️⃣ Root TabView
+struct RootTabView: View {
+
+    @StateObject private var coordinator = TabCoordinator()
+
+    var body: some View {
+        TabView(selection: $coordinator.selectedTab) {
+
+            HomeStack(coordinator: coordinator)
+                .tabItem {
+                    Label("Home", systemImage: "house")
+                }
+                .tag(AppTab.home)
+
+            SearchStack(coordinator: coordinator)
+                .tabItem {
+                    Label("Search", systemImage: "magnifyingglass")
+                }
+                .tag(AppTab.search)
+
+            ProfileStack(coordinator: coordinator)
+                .tabItem {
+                    Label("Profile", systemImage: "person")
+                }
+                .tag(AppTab.profile)
+        }
+    }
+}
+
+5️⃣ Home Navigation Stack
+struct HomeStack: View {
+
+    @ObservedObject var coordinator: TabCoordinator
+
+    var body: some View {
+        NavigationStack(path: $coordinator.homePath) {
+            HomeView(
+                viewModel: HomeViewModel(coordinator: coordinator)
+            )
+            .navigationDestination(for: HomeRoute.self) { route in
+                switch route {
+                case .details(let id):
+                    HomeDetailView(id: id)
+                }
+            }
+        }
+    }
+}
+
+6️⃣ ViewModel Requests Navigation
+final class HomeViewModel: ObservableObject {
+
+    private let coordinator: TabCoordinator
+
+    init(coordinator: TabCoordinator) {
+        self.coordinator = coordinator
+    }
+
+    func showDetails() {
+        coordinator.homePath.append(.details(id: "42"))
+    }
+
+    func goToProfileTab() {
+        coordinator.switchTab(.profile)
+    }
+}
+
+
+🚫 No NavigationLink
+🚫 No tab logic in the view
+
+7️⃣ Why This Pattern Works
+Problem	Solution
+Tab resets navigation	Separate paths
+Cross-tab navigation	Coordinator
+State loss on tab switch	Persistent stacks
+Complex flows	Centralized logic
+🚫 Common Anti-Patterns
+
+❌ Single NavigationStack for all tabs
+❌ NavigationLinks inside TabView
+❌ Switching tabs from views
+❌ Shared state across tabs
+
+🧠 Interview Power Answer
+
+If asked:
+
+“How do you handle navigation with TabView in SwiftUI?”
+
+Say:
+
+“Each tab owns its own NavigationStack, coordinated by a TabCoordinator. Navigation is data-driven and isolated per tab, which prevents state loss and scales well.”
+
+⭐ When to Use TabView + Coordinator
+
+Use this pattern when:
+
+App has 2+ tabs
+
+Each tab has deep navigation
+
+State must persist per tab
+
+You need cross-tab navigation
+
+Skip it for:
+
+Simple, single-stack apps
+
+One-tab utilities
+
+🔥 Golden Rules
+
+One tab = one navigation stack
+
+Navigation is state
+
+Tabs never navigate themselves
+
+Coordinators own flow
+
+Views only render
