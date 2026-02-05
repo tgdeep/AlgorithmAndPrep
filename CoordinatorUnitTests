@@ -1,0 +1,175 @@
+🧪 SwiftUI Coordinator Unit Tests
+
+Navigation in SwiftUI is state-driven, which makes coordinators highly testable.
+You don’t test views — you test navigation state changes.
+
+🧠 What to Test in a Coordinator
+
+✅ Path mutations
+✅ Tab switching
+✅ Pop / reset behavior
+✅ Deep-link handling
+❌ UI rendering
+❌ NavigationStack itself
+
+Coordinators are pure logic — perfect for unit tests.
+
+1️⃣ Example Coordinator (Under Test)
+@MainActor
+final class AppCoordinator: ObservableObject {
+
+    @Published var path: [AppRoute] = []
+
+    func navigate(to route: AppRoute) {
+        path.append(route)
+    }
+
+    func pop() {
+        guard !path.isEmpty else { return }
+        path.removeLast()
+    }
+
+    func popToRoot() {
+        path.removeAll()
+    }
+}
+
+2️⃣ Test Setup
+import XCTest
+@testable import YourAppModule
+
+@MainActor
+final class AppCoordinatorTests: XCTestCase {
+
+    var coordinator: AppCoordinator!
+
+    override func setUp() {
+        super.setUp()
+        coordinator = AppCoordinator()
+    }
+
+    override func tearDown() {
+        coordinator = nil
+        super.tearDown()
+    }
+}
+
+3️⃣ Test Navigation Push
+func testNavigatePushesRoute() {
+    coordinator.navigate(to: .profile(userId: "123"))
+
+    XCTAssertEqual(coordinator.path.count, 1)
+    XCTAssertEqual(coordinator.path.first, .profile(userId: "123"))
+}
+
+
+✅ Verifies navigation intent
+✅ No UI involved
+
+4️⃣ Test Pop Behavior
+func testPopRemovesLastRoute() {
+    coordinator.navigate(to: .profile(userId: "1"))
+    coordinator.navigate(to: .settings)
+
+    coordinator.pop()
+
+    XCTAssertEqual(coordinator.path.count, 1)
+    XCTAssertEqual(coordinator.path.first, .profile(userId: "1"))
+}
+
+5️⃣ Test Pop to Root
+func testPopToRootClearsPath() {
+    coordinator.navigate(to: .profile(userId: "1"))
+    coordinator.navigate(to: .settings)
+
+    coordinator.popToRoot()
+
+    XCTAssertTrue(coordinator.path.isEmpty)
+}
+
+6️⃣ Testing Tab Coordinator
+Coordinator
+@MainActor
+final class TabCoordinator: ObservableObject {
+
+    @Published var selectedTab: AppTab = .home
+    @Published var homePath: [HomeRoute] = []
+
+    func switchTab(_ tab: AppTab) {
+        selectedTab = tab
+    }
+}
+
+Test Tab Switching
+func testTabSwitching() {
+    let coordinator = TabCoordinator()
+
+    coordinator.switchTab(.profile)
+
+    XCTAssertEqual(coordinator.selectedTab, .profile)
+}
+
+7️⃣ Test Cross-Tab Navigation
+func testHomeNavigationPath() {
+    let coordinator = TabCoordinator()
+
+    coordinator.homePath.append(.details(id: "42"))
+
+    XCTAssertEqual(coordinator.homePath.count, 1)
+    XCTAssertEqual(coordinator.homePath.first, .details(id: "42"))
+}
+
+8️⃣ Deep Link Test (Advanced)
+func testDeepLinkNavigation() {
+    coordinator.navigate(to: .profile(userId: "999"))
+
+    XCTAssertEqual(
+        coordinator.path,
+        [.profile(userId: "999")]
+    )
+}
+
+
+💡 Deep links become simple state assertions.
+
+9️⃣ What NOT to Test
+
+🚫 NavigationStack behavior
+🚫 View rendering
+🚫 SwiftUI animations
+🚫 System navigation transitions
+
+Apple already tested those.
+
+🔥 Why Coordinator Tests Are Powerful
+Benefit	Reason
+Fast tests	No UI involved
+Deterministic	Pure state
+Easy debugging	Clear failures
+CI-friendly	No simulators
+🧠 Interview Power Answer
+
+If asked:
+
+“How do you test navigation in SwiftUI?”
+
+Say:
+
+“I test the coordinator directly by asserting navigation state changes. Since navigation is data-driven, coordinators are pure logic and easy to unit test.”
+
+⭐ Best Practices
+
+Keep coordinators UI-free
+
+Make routes Hashable
+
+Test path mutations
+
+Avoid NavigationLink in tests
+
+One coordinator = one responsibility
+
+🔚 Key Takeaway
+
+If navigation is state,
+navigation tests are just state tests.
