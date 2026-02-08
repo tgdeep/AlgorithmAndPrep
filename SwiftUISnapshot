@@ -1,0 +1,224 @@
+📸 SwiftUI Snapshot Testing
+
+Snapshot testing ensures your UI does not visually regress when code changes.
+It compares a rendered view against a stored reference image.
+
+This is especially powerful for:
+
+Design-heavy screens
+
+SwiftUI refactors
+
+Preventing accidental UI breakage
+
+🧠 What Snapshot Testing Is (and Isn’t)
+✅ Snapshot Testing IS
+
+Pixel-level UI regression testing
+
+A safety net for refactors
+
+Great for SwiftUI
+
+❌ Snapshot Testing IS NOT
+
+Business logic testing
+
+Layout correctness testing
+
+A replacement for unit tests
+
+1️⃣ Recommended Tool (Industry Standard)
+
+Use Point-Free’s SnapshotTesting library.
+
+Why this one?
+
+SwiftUI-friendly
+
+Actively maintained
+
+Used in production apps
+
+Supports iOS, macOS, dark mode, dynamic type
+
+2️⃣ Installing SnapshotTesting (SPM)
+
+Add via Swift Package Manager:
+
+https://github.com/pointfreeco/swift-snapshot-testing
+
+
+Add to your test target, not app target.
+
+3️⃣ First SwiftUI Snapshot Test
+Example View
+struct ProfileCardView: View {
+    let name: String
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Text(name)
+                .font(.title2)
+            Button("Follow") {}
+        }
+        .padding()
+    }
+}
+
+Snapshot Test
+import XCTest
+import SnapshotTesting
+@testable import YourAppModule
+
+final class ProfileCardViewTests: XCTestCase {
+
+    func testProfileCardView() {
+        let view = ProfileCardView(name: "Deepak")
+
+        assertSnapshot(
+            matching: view,
+            as: .image(layout: .sizeThatFits)
+        )
+    }
+}
+
+
+📌 First run records the snapshot
+📌 Future runs compare against it
+
+4️⃣ Dark Mode Snapshot
+func testProfileCardDarkMode() {
+    let view = ProfileCardView(name: "Deepak")
+        .preferredColorScheme(.dark)
+
+    assertSnapshot(
+        matching: view,
+        as: .image(layout: .sizeThatFits)
+    )
+}
+
+
+✅ Prevents dark-mode regressions
+
+5️⃣ Dynamic Type Snapshot
+func testProfileCardLargeText() {
+    let view = ProfileCardView(name: "Deepak")
+        .environment(\.sizeCategory, .accessibilityExtraExtraLarge)
+
+    assertSnapshot(
+        matching: view,
+        as: .image(layout: .sizeThatFits)
+    )
+}
+
+
+✅ Catches truncation issues early
+
+6️⃣ Device-Specific Snapshot
+func testProfileCard_iPhone14() {
+    let view = ProfileCardView(name: "Deepak")
+
+    assertSnapshot(
+        matching: view,
+        as: .image(on: .iPhone14)
+    )
+}
+
+7️⃣ Snapshot Testing with Navigation
+func testProfileScreenInNavigation() {
+    let view = NavigationStack {
+        ProfileCardView(name: "Deepak")
+    }
+
+    assertSnapshot(
+        matching: view,
+        as: .image(on: .iPhone14)
+    )
+}
+
+8️⃣ When to Update Snapshots
+
+Update snapshots only when:
+
+UI change is intentional
+
+Design change is approved
+
+Accessibility adjustment is expected
+
+❌ Do NOT blindly re-record snapshots
+
+9️⃣ Snapshot Testing Best Practices
+
+✅ One snapshot per scenario
+✅ Test stable screens
+✅ Avoid animations
+✅ Avoid random data
+✅ Use fixed fonts & dates
+
+🔥 Common Snapshot Testing Pitfalls
+Pitfall	Fix
+Failing CI tests	Match simulator OS
+Font mismatch	Use system fonts
+Animation flicker	Disable animations
+Random data	Use static mocks
+🧠 Interview Power Answer
+
+If asked:
+
+“How do you test SwiftUI UI changes?”
+
+Say:
+
+“I use snapshot testing for visual regression, combined with ViewModel unit tests. Snapshot tests protect design during refactors.”
+
+⭐ When to Use Snapshot Tests
+
+Use for:
+
+Design-critical screens
+
+Reusable components
+
+Marketing UI
+
+Dark mode / accessibility
+
+Avoid for:
+
+Highly dynamic screens
+
+Animations
+
+Lists with live data
+
+🧭 SwiftUI Testing Strategy (Recap)
+Business Logic → Unit Tests
+ViewModels     → Unit Tests
+UI Flow        → UI Tests
+UI Regression  → Snapshot Tests
+
+📅 5-Day SwiftUI Testing Series Plan
+
+I’ll follow this order automatically 👇
+
+✅ Day 1 (Today)
+
+SwiftUI Snapshot Testing ✅
+
+🔜 Day 2
+
+State Restoration & Scene Phase Testing
+
+🔜 Day 3
+
+Deep Linking Test Strategies
+
+🔜 Day 4
+
+SwiftUI + MVVM Integration Tests
+
+🔜 Day 5
+
+CI Setup for SwiftUI Tests (GitHub Actions)
