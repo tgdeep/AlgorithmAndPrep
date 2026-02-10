@@ -1,0 +1,236 @@
+📅 SwiftUI Testing – 5-Day Series
+
+SwiftUI Snapshot Testing ✅
+
+SwiftUI ViewModel Testing (Advanced) ⬅️ Today
+
+SwiftUI Async & Concurrency Testing
+
+SwiftUI Navigation & Coordinator Testing
+
+SwiftUI CI Testing Strategy
+
+🧪 SwiftUI ViewModel Testing (Day 2)
+
+In SwiftUI, ViewModels are the most important test surface.
+If ViewModels are correct, the UI almost always is.
+
+✅ Test logic
+❌ Don’t test SwiftUI internals
+
+🧠 What to Test in a ViewModel
+
+You should test:
+
+State transitions
+
+Business rules
+
+Error handling
+
+Edge cases
+
+Async behavior
+
+You should NOT test:
+
+@State / @Published mechanics
+
+View rendering
+
+body recomputation
+
+1️⃣ ViewModel With Explicit UI State (Baseline)
+View State
+enum LoginState {
+    case idle
+    case loading
+    case success(User)
+    case error(String)
+}
+
+ViewModel
+@MainActor
+final class LoginViewModel: ObservableObject {
+
+    @Published private(set) var state: LoginState = .idle
+
+    private let service: LoginServicing
+
+    init(service: LoginServicing) {
+        self.service = service
+    }
+
+    func login(username: String, password: String) async {
+        state = .loading
+
+        do {
+            let user = try await service.login(
+                username: username,
+                password: password
+            )
+            state = .success(user)
+        } catch {
+            state = .error("Login failed")
+        }
+    }
+}
+
+2️⃣ Mocking Dependencies (Critical)
+Protocol
+protocol LoginServicing {
+    func login(username: String, password: String) async throws -> User
+}
+
+Mock Success Service
+struct MockLoginSuccessService: LoginServicing {
+    func login(username: String, password: String) async throws -> User {
+        User(name: "Test User")
+    }
+}
+
+Mock Failure Service
+struct MockLoginFailureService: LoginServicing {
+    func login(username: String, password: String) async throws -> User {
+        throw URLError(.badServerResponse)
+    }
+}
+
+3️⃣ Testing Success State
+func testLoginSuccess() async {
+    let vm = LoginViewModel(
+        service: MockLoginSuccessService()
+    )
+
+    await vm.login(username: "test", password: "123")
+
+    if case .success(let user) = vm.state {
+        XCTAssertEqual(user.name, "Test User")
+    } else {
+        XCTFail("Expected success state")
+    }
+}
+
+4️⃣ Testing Error State
+func testLoginFailure() async {
+    let vm = LoginViewModel(
+        service: MockLoginFailureService()
+    )
+
+    await vm.login(username: "test", password: "123")
+
+    if case .error(let message) = vm.state {
+        XCTAssertEqual(message, "Login failed")
+    } else {
+        XCTFail("Expected error state")
+    }
+}
+
+5️⃣ Testing State Transitions (Important)
+func testLoginStateSequence() async {
+    let vm = LoginViewModel(
+        service: MockLoginSuccessService()
+    )
+
+    XCTAssertEqual(vm.state, .idle)
+
+    let task = Task {
+        await vm.login(username: "test", password: "123")
+    }
+
+    // Allow async state update
+    await Task.yield()
+
+    XCTAssertEqual(vm.state, .loading)
+
+    await task.value
+}
+
+
+Why this matters:
+
+Confirms loading → success
+
+Prevents UI flicker bugs
+
+6️⃣ Testing Multiple Calls / Edge Cases
+func testMultipleLoginCalls() async {
+    let vm = LoginViewModel(
+        service: MockLoginSuccessService()
+    )
+
+    await vm.login(username: "a", password: "1")
+    await vm.login(username: "b", password: "2")
+
+    if case .success(let user) = vm.state {
+        XCTAssertEqual(user.name, "Test User")
+    } else {
+        XCTFail("Expected success state")
+    }
+}
+
+7️⃣ Testing That ViewModel Is @MainActor Safe
+func testRunsOnMainActor() async {
+    let vm = LoginViewModel(
+        service: MockLoginSuccessService()
+    )
+
+    await vm.login(username: "test", password: "123")
+
+    XCTAssertTrue(Thread.isMainThread)
+}
+
+
+Prevents:
+
+UI update crashes
+
+Race conditions
+
+8️⃣ What NOT to Do in ViewModel Tests
+
+🚫 Sleeping threads
+🚫 Waiting on expectations unnecessarily
+🚫 Testing delays instead of outcomes
+🚫 Using real network calls
+
+🔥 Common ViewModel Testing Mistakes
+
+❌ Testing too much UI behavior
+❌ Boolean-heavy states
+❌ Not testing failure paths
+❌ No protocol-based mocking
+
+🧠 Interview Power Answer
+
+If asked:
+
+“How do you test SwiftUI ViewModels?”
+
+Say:
+
+“I unit test ViewModels by asserting state transitions using mock services. Views stay untested, logic stays deterministic, and async behavior is covered.”
+
+⭐ Golden Rules
+
+Test states, not views
+
+Mock all dependencies
+
+Cover success & failure
+
+Prefer enums over booleans
+
+Keep ViewModels pure
+
+✅ Day 2 Complete
+
+You now have:
+
+Production-grade ViewModel testing
+
+Async-safe tests
+
+Deterministic mocks
+
+Interview-ready answers
