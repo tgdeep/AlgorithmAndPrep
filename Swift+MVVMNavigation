@@ -1,0 +1,228 @@
+🧭 SwiftUI MVVM + Navigation Coordinator
+
+In production SwiftUI apps, navigation should be data-driven, not embedded inside views.
+A Navigation Coordinator separates navigation logic from UI rendering.
+
+This pattern scales well for:
+
+Complex flows
+
+Deep links
+
+Multi-step journeys
+
+Feature modularization
+
+🧠 Core Idea
+View → ViewModel → Coordinator → NavigationStack
+
+
+Views do not navigate
+
+ViewModels request navigation
+
+Coordinator owns navigation state
+
+📁 Recommended Structure
+App/
+ ├─ AppCoordinator.swift
+ ├─ AppRoute.swift
+Features/
+ ├─ Home/
+ │   ├─ HomeView.swift
+ │   └─ HomeViewModel.swift
+ ├─ Profile/
+ │   ├─ ProfileView.swift
+ │   └─ ProfileViewModel.swift
+
+1️⃣ Define Routes (Navigation = Data)
+enum AppRoute: Hashable {
+    case profile(userId: String)
+    case settings
+}
+
+
+✅ Hashable
+✅ Serializable
+✅ Deep-link friendly
+
+2️⃣ Navigation Coordinator (Single Source of Truth)
+import SwiftUI
+
+@MainActor
+final class AppCoordinator: ObservableObject {
+
+    @Published var path: [AppRoute] = []
+
+    func navigate(to route: AppRoute) {
+        path.append(route)
+    }
+
+    func pop() {
+        path.removeLast()
+    }
+
+    func popToRoot() {
+        path.removeAll()
+    }
+}
+
+Responsibilities
+
+Owns navigation state
+
+Handles push/pop/reset
+
+No UI code
+
+3️⃣ Root NavigationStack (App Entry)
+struct RootView: View {
+
+    @StateObject private var coordinator = AppCoordinator()
+
+    var body: some View {
+        NavigationStack(path: $coordinator.path) {
+            HomeView(viewModel: HomeViewModel(coordinator: coordinator))
+                .navigationDestination(for: AppRoute.self) { route in
+                    switch route {
+                    case .profile(let userId):
+                        ProfileView(
+                            viewModel: ProfileViewModel(
+                                userId: userId,
+                                coordinator: coordinator
+                            )
+                        )
+
+                    case .settings:
+                        SettingsView()
+                    }
+                }
+        }
+    }
+}
+
+
+✅ Centralized navigation
+✅ Predictable
+✅ Easy to debug
+
+4️⃣ ViewModel Requests Navigation (Not the View)
+final class HomeViewModel: ObservableObject {
+
+    private let coordinator: AppCoordinator
+
+    init(coordinator: AppCoordinator) {
+        self.coordinator = coordinator
+    }
+
+    func onProfileTap() {
+        coordinator.navigate(to: .profile(userId: "123"))
+    }
+}
+
+
+💡 ViewModel does not know about NavigationStack
+
+5️⃣ View Is a Pure Renderer
+struct HomeView: View {
+
+    @StateObject private var viewModel: HomeViewModel
+
+    init(viewModel: HomeViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
+
+    var body: some View {
+        VStack(spacing: 20) {
+
+            Text("Home")
+                .font(.title2)
+
+            Button("Go to Profile") {
+                viewModel.onProfileTap()
+            }
+
+        }
+        .padding()
+    }
+}
+
+
+✅ No navigation code
+✅ No routes
+✅ No side effects
+
+6️⃣ Destination ViewModel (Receives Dependencies)
+final class ProfileViewModel: ObservableObject {
+
+    let userId: String
+    private let coordinator: AppCoordinator
+
+    init(userId: String, coordinator: AppCoordinator) {
+        self.userId = userId
+        self.coordinator = coordinator
+    }
+
+    func close() {
+        coordinator.pop()
+    }
+}
+
+7️⃣ Why This Pattern Works
+Problem	Solved
+Navigation logic scattered	Centralized
+Hard-to-test navigation	Testable
+Deep linking	Natural
+Multi-step flows	Easy
+State resets confusion	Explicit
+🚫 What This Avoids
+
+❌ Navigation inside Views
+
+❌ String-based navigation
+
+❌ Massive ViewModels
+
+❌ UIKit-style coordinators
+
+❌ Hidden side effects
+
+🧠 Interview Power Answer
+
+If asked:
+
+“How do you handle navigation in SwiftUI MVVM?”
+
+Say:
+
+“I use a navigation coordinator with a data-driven NavigationStack. ViewModels request navigation via routes, and the coordinator owns the navigation state.”
+
+⭐ When to Use This Pattern
+
+Use MVVM + Coordinator when:
+
+App has more than 3–4 screens
+
+Navigation logic is non-trivial
+
+You need deep linking
+
+Multiple teams work on features
+
+Skip it for:
+
+Very small apps
+
+Single-screen tools
+
+🔥 Golden Rules
+
+Navigation is data
+
+Views don’t navigate
+
+ViewModels don’t know UI
+
+Coordinator owns flow
+
+One stack, many features

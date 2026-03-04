@@ -1,0 +1,252 @@
+📅 SwiftUI Testing Series
+
+Snapshot Testing ✅
+
+ViewModel Testing ✅
+
+Async & Concurrency Testing ✅
+
+Navigation & Coordinator Testing (Advanced) ⬅️ Today
+
+CI Testing Strategy
+
+🧭 SwiftUI Navigation & Coordinator Testing (Day 4)
+
+If your navigation isn’t testable, your architecture isn’t scalable.
+
+SwiftUI’s NavigationStack is state-driven, which makes navigation logic surprisingly easy to unit test — if you structured it correctly.
+
+Navigation is just state mutation.
+If it’s not, you architected it wrong.
+
+🧠 What You Should Test
+
+✅ Route pushing
+✅ Route popping
+✅ Reset to root
+✅ Cross-tab navigation
+✅ Deep link handling
+❌ NavigationStack rendering
+❌ SwiftUI transitions
+
+1️⃣ Example Coordinator
+@MainActor
+final class AppCoordinator: ObservableObject {
+
+    @Published var path: [AppRoute] = []
+
+    func navigate(to route: AppRoute) {
+        path.append(route)
+    }
+
+    func pop() {
+        guard !path.isEmpty else { return }
+        path.removeLast()
+    }
+
+    func popToRoot() {
+        path.removeAll()
+    }
+}
+
+2️⃣ Basic Push Test
+func testNavigatePushesRoute() {
+    let coordinator = AppCoordinator()
+
+    coordinator.navigate(to: .profile(userId: "123"))
+
+    XCTAssertEqual(coordinator.path.count, 1)
+    XCTAssertEqual(coordinator.path.first, .profile(userId: "123"))
+}
+
+
+You are not testing UI.
+You are testing navigation intent.
+
+3️⃣ Pop Behavior Test
+func testPopRemovesLastRoute() {
+    let coordinator = AppCoordinator()
+
+    coordinator.navigate(to: .profile(userId: "1"))
+    coordinator.navigate(to: .settings)
+
+    coordinator.pop()
+
+    XCTAssertEqual(coordinator.path, [.profile(userId: "1")])
+}
+
+
+Edge case mindset. Good engineers think about removal behavior.
+
+4️⃣ Pop To Root Test
+func testPopToRootClearsPath() {
+    let coordinator = AppCoordinator()
+
+    coordinator.navigate(to: .profile(userId: "1"))
+    coordinator.navigate(to: .settings)
+
+    coordinator.popToRoot()
+
+    XCTAssertTrue(coordinator.path.isEmpty)
+}
+
+5️⃣ Testing ViewModel → Coordinator Interaction
+
+Your ViewModel should not know about NavigationStack.
+It should only request navigation.
+
+ViewModel
+final class HomeViewModel {
+
+    private let coordinator: AppCoordinator
+
+    init(coordinator: AppCoordinator) {
+        self.coordinator = coordinator
+    }
+
+    func onProfileTap() {
+        coordinator.navigate(to: .profile(userId: "42"))
+    }
+}
+
+Test
+func testProfileTapNavigates() {
+    let coordinator = AppCoordinator()
+    let vm = HomeViewModel(coordinator: coordinator)
+
+    vm.onProfileTap()
+
+    XCTAssertEqual(coordinator.path.first, .profile(userId: "42"))
+}
+
+
+Clean. Deterministic. Zero UI dependency.
+
+6️⃣ Testing Cross-Tab Navigation
+
+If using TabCoordinator:
+
+@MainActor
+final class TabCoordinator: ObservableObject {
+
+    @Published var selectedTab: AppTab = .home
+    @Published var homePath: [HomeRoute] = []
+
+    func switchTab(_ tab: AppTab) {
+        selectedTab = tab
+    }
+}
+
+Test
+func testSwitchTab() {
+    let coordinator = TabCoordinator()
+
+    coordinator.switchTab(.profile)
+
+    XCTAssertEqual(coordinator.selectedTab, .profile)
+}
+
+
+Navigation is just state.
+Stop overcomplicating it.
+
+7️⃣ Testing Deep Linking
+
+If you support deep links:
+
+func handleDeepLink(_ route: AppRoute) {
+    path = [route]
+}
+
+Test
+func testDeepLinkSetsPath() {
+    let coordinator = AppCoordinator()
+
+    coordinator.handleDeepLink(.profile(userId: "999"))
+
+    XCTAssertEqual(coordinator.path, [.profile(userId: "999")])
+}
+
+
+Deep linking becomes trivial when navigation is data.
+
+8️⃣ Advanced: Preventing Duplicate Pushes
+
+If you guard against duplicate navigation:
+
+func navigateIfNeeded(to route: AppRoute) {
+    guard path.last != route else { return }
+    path.append(route)
+}
+
+Test
+func testDuplicateNavigationPrevented() {
+    let coordinator = AppCoordinator()
+
+    coordinator.navigateIfNeeded(to: .settings)
+    coordinator.navigateIfNeeded(to: .settings)
+
+    XCTAssertEqual(coordinator.path.count, 1)
+}
+
+
+Now you’re thinking like someone who’s shipped apps.
+
+🔥 Common Navigation Testing Mistakes
+
+❌ Testing NavigationStack directly
+❌ Using UI tests for simple push logic
+❌ Embedding navigation inside Views
+❌ Using string-based routes
+❌ Not making routes Hashable
+
+🧠 Interview Power Answer
+
+If asked:
+
+“How do you test navigation in SwiftUI?”
+
+Say:
+
+“I treat navigation as state. Coordinators own route arrays, and I assert path mutations directly in unit tests.”
+
+That sentence alone separates you from 70% of candidates.
+
+⭐ Golden Rules
+
+Navigation is data
+
+Coordinators own path
+
+ViewModels request navigation
+
+Never test SwiftUI rendering
+
+Keep coordinators UI-free
+
+✅ Day 4 Complete
+
+You now know how to test:
+
+Push
+
+Pop
+
+Reset
+
+Cross-tab navigation
+
+Deep links
+
+Duplicate prevention
+
+📌 Final Topic Tomorrow
+
+When you say “give me next topic”, we’ll finish strong with:
+
+👉 Day 5 – SwiftUI CI Testing Strategy (GitHub Actions / Xcode Cloud / Fastlane)
+
+We’re building a serious, production-ready testing guide here.
+One more day and it’s a complete series.
+
+I prefer this response

@@ -1,0 +1,193 @@
+🧱 SwiftUI Architecture Patterns
+
+SwiftUI is not just a UI framework — it’s an architecture framework.
+Good SwiftUI apps are structured around state, identity, and data flow, not controllers.
+
+1️⃣ MVVM (SwiftUI-Native MVVM)
+Structure
+View → ViewModel → Model
+
+Pattern
+struct ProfileView: View {
+    @StateObject var vm = ProfileViewModel()
+
+    var body: some View {
+        Text(vm.name)
+    }
+}
+
+final class ProfileViewModel: ObservableObject {
+    @Published var name: String = "Deepak"
+}
+
+Why It Works in SwiftUI
+
+View = rendering layer
+
+ViewModel = state + logic
+
+Model = data
+
+Best For:
+Most production SwiftUI apps
+
+2️⃣ Unidirectional Data Flow (UDF)
+Flow
+State → View → Action → State
+
+Example
+Button("Increment") {
+    vm.increment()
+}
+
+
+State changes → UI updates automatically
+
+Why It Matters:
+Predictable behavior, easy debugging
+
+3️⃣ Feature-Based Architecture
+Structure
+Features/
+  Login/
+    LoginView.swift
+    LoginViewModel.swift
+  Dashboard/
+    DashboardView.swift
+    DashboardViewModel.swift
+
+
+Why:
+Scales better than layer-based folders
+
+4️⃣ Environment-Driven Architecture
+Pattern
+@EnvironmentObject var session: UserSession
+
+
+Use For:
+
+Auth state
+
+App settings
+
+Global session
+
+Rule:
+Use sparingly — global state = global invalidation
+
+5️⃣ Composition Over Inheritance
+❌ UIKit Style
+class BaseViewController: UIViewController {}
+
+✅ SwiftUI Style
+struct CardView<Content: View>: View {
+    let content: Content
+    var body: some View { content }
+}
+
+
+Why:
+Reusable, testable, scalable
+
+6️⃣ View as a Pure Function of State
+Pattern
+View = f(State)
+
+
+Meaning:
+UI has no logic, only rendering
+
+7️⃣ Coordinator Pattern (SwiftUI Style)
+Navigation Coordinator
+final class AppRouter: ObservableObject {
+    @Published var path: [Route] = []
+}
+
+
+Use For:
+
+Complex navigation flows
+
+Deep linking
+
+Multi-step flows
+
+8️⃣ Modular Architecture
+Pattern
+Core/
+  Networking
+  Storage
+  Auth
+Features/
+UI/
+
+
+Why:
+Supports SPM modules, testability, reuse
+
+9️⃣ Protocol-Oriented Architecture
+Pattern
+protocol AuthServicing {
+    func login() async -> Bool
+}
+
+
+Why:
+
+Testability
+
+Mocking
+
+Dependency inversion
+
+🔟 Clean Architecture (SwiftUI Style)
+Layers
+UI (SwiftUI Views)
+ViewModels
+Domain Logic
+Services
+
+
+Rule:
+UI depends on nothing.
+Everything depends inward.
+
+🧠 Architecture Decision Guide
+Problem	Pattern
+Simple app	MVVM
+Complex flows	Coordinator
+Large team	Feature-based
+Global state	EnvironmentObject
+Test-heavy app	Protocol + DI
+Multi-module	Modular architecture
+🔥 Golden Architecture Rules
+
+Views are dumb
+
+State lives outside views
+
+Identity is sacred
+
+Navigation is data
+
+Composition over inheritance
+
+Unidirectional data flow
+
+🧠 Interview Power Answer
+
+If asked:
+
+“What architecture do you use in SwiftUI?”
+
+Say:
+
+“MVVM with unidirectional data flow, feature-based modularization, and environment-driven shared state — with coordinators for navigation.”
+
+⭐ Architecture Maturity Levels
+Level	Description
+Beginner	Logic in views
+Intermediate	MVVM
+Advanced	Feature-based + DI
+Expert	Modular + UDF + Coordinators

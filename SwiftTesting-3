@@ -1,0 +1,238 @@
+Perfect 👍
+Continuing your 5-Day SwiftUI Testing Series.
+
+📅 SwiftUI Testing Series
+
+Snapshot Testing ✅
+
+ViewModel Testing ✅
+
+SwiftUI Async & Concurrency Testing ⬅️ Today
+
+Navigation & Coordinator Testing
+
+CI Testing Strategy
+
+⚡ SwiftUI Async & Concurrency Testing (Day 3)
+
+Modern SwiftUI apps rely heavily on:
+
+async/await
+
+.task
+
+Task
+
+Cancellation
+
+@MainActor
+
+Structured concurrency
+
+Testing async code properly is what separates mid-level from senior-level iOS engineers.
+
+🧠 What You Should Test
+
+✅ Async state transitions
+✅ Cancellation behavior
+✅ Concurrent task handling
+✅ Race condition safety
+✅ MainActor correctness
+❌ Swift concurrency internals
+
+1️⃣ Testing Async Functions Properly
+ViewModel Example
+@MainActor
+final class DataViewModel: ObservableObject {
+
+    @Published private(set) var state: String = "idle"
+
+    private let service: DataServicing
+
+    init(service: DataServicing) {
+        self.service = service
+    }
+
+    func load() async {
+        state = "loading"
+
+        do {
+            let result = try await service.fetch()
+            state = result
+        } catch {
+            state = "error"
+        }
+    }
+}
+
+Basic Async Test
+func testLoadSuccess() async {
+    let vm = DataViewModel(service: MockSuccessService())
+
+    await vm.load()
+
+    XCTAssertEqual(vm.state, "success")
+}
+
+
+⚠️ No expectations needed — async XCTest handles it.
+
+2️⃣ Testing Loading State During Execution
+
+This is where most engineers fail.
+
+func testLoadingStateAppears() async {
+    let vm = DataViewModel(service: MockDelayedService())
+
+    let task = Task {
+        await vm.load()
+    }
+
+    await Task.yield()
+
+    XCTAssertEqual(vm.state, "loading")
+
+    await task.value
+}
+
+
+Why Task.yield()?
+
+Allows state update before completion
+
+Prevents race condition in test
+
+3️⃣ Testing Cancellation (Advanced)
+ViewModel
+func loadCancellable() async {
+    state = "loading"
+
+    do {
+        let result = try await service.fetch()
+        if Task.isCancelled { return }
+        state = result
+    } catch {
+        state = "error"
+    }
+}
+
+Test Cancellation
+func testCancellation() async {
+    let vm = DataViewModel(service: MockDelayedService())
+
+    let task = Task {
+        await vm.loadCancellable()
+    }
+
+    task.cancel()
+
+    await Task.yield()
+
+    XCTAssertNotEqual(vm.state, "success")
+}
+
+
+This prevents:
+
+Updating UI after cancellation
+
+Memory leaks
+
+Ghost updates
+
+4️⃣ Testing Concurrent Calls
+func testConcurrentLoads() async {
+    let vm = DataViewModel(service: MockSuccessService())
+
+    async let first = vm.load()
+    async let second = vm.load()
+
+    _ = await (first, second)
+
+    XCTAssertEqual(vm.state, "success")
+}
+
+
+Ensures:
+
+No crashes
+
+No inconsistent states
+
+5️⃣ Testing @MainActor Enforcement
+func testMainActorEnforced() async {
+    let vm = DataViewModel(service: MockSuccessService())
+
+    await vm.load()
+
+    XCTAssertTrue(Thread.isMainThread)
+}
+
+
+Prevents:
+
+“Publishing changes from background thread” crashes
+
+6️⃣ Testing Task Timeouts (Deterministic)
+
+Instead of sleep, use mocks:
+
+struct MockDelayedService: DataServicing {
+    func fetch() async throws -> String {
+        try await Task.sleep(nanoseconds: 500_000_000)
+        return "success"
+    }
+}
+
+
+Avoid:
+
+Random delays
+
+Network dependency
+
+Real API calls
+
+7️⃣ Common Async Testing Mistakes
+
+❌ Using sleep()
+❌ Waiting for fixed time intervals
+❌ Testing exact timing
+❌ Ignoring cancellation
+❌ Not marking tests async
+
+🔥 Async Testing Golden Rules
+
+Always use mocks
+
+Use Task.yield() for intermediate states
+
+Avoid time-based assertions
+
+Test cancellation paths
+
+Mark ViewModels @MainActor
+
+🧠 Interview Power Answer
+
+If asked:
+
+“How do you test async SwiftUI code?”
+
+Say:
+
+“I write async XCTest methods, mock dependencies, test state transitions including loading and cancellation, and ensure ViewModels are MainActor-safe.”
+
+⭐ Why This Matters
+
+Most SwiftUI bugs today come from:
+
+Async race conditions
+
+Cancellation mishandling
+
+Background thread updates
+
+Multiple simultaneous tasks
+
+Testing async behavior is now mandatory in senior interviews.

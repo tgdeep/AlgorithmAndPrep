@@ -1,0 +1,250 @@
+🧩 Production-Grade SwiftUI MVVM Template
+
+This template shows how MVVM should look in a real SwiftUI app, not a demo project.
+
+It focuses on:
+
+Clear separation of concerns
+
+Testability
+
+Async support
+
+Dependency injection
+
+Predictable state flow
+
+📁 Recommended Folder Structure
+Features/
+ └─ Profile/
+     ├─ ProfileView.swift
+     ├─ ProfileViewModel.swift
+     ├─ ProfileState.swift
+     ├─ ProfileService.swift
+     └─ ProfileModels.swift
+Core/
+ ├─ Networking/
+ ├─ Services/
+ └─ Utilities/
+
+
+👉 Feature-based, not layer-based.
+
+1️⃣ View (Pure Rendering Layer)
+import SwiftUI
+
+struct ProfileView: View {
+
+    @StateObject private var viewModel: ProfileViewModel
+
+    init(viewModel: ProfileViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
+
+    var body: some View {
+        content
+            .navigationTitle("Profile")
+            .task {
+                await viewModel.loadProfile()
+            }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        switch viewModel.state {
+        case .idle, .loading:
+            ProgressView()
+
+        case .loaded(let profile):
+            VStack(spacing: 16) {
+                Text(profile.name)
+                    .font(.title2)
+
+                Text(profile.email)
+                    .foregroundColor(.secondary)
+
+                Button("Refresh") {
+                    Task {
+                        await viewModel.loadProfile()
+                    }
+                }
+            }
+
+        case .error(let message):
+            Text(message)
+                .foregroundColor(.red)
+        }
+    }
+}
+
+✅ View Responsibilities
+
+Renders UI
+
+Triggers actions
+
+Observes state
+
+No business logic
+
+2️⃣ View State (Single Source of Truth)
+enum ProfileState {
+    case idle
+    case loading
+    case loaded(Profile)
+    case error(String)
+}
+
+Why this matters
+
+Explicit UI states
+
+No boolean explosion
+
+Easy debugging
+
+Easy testing
+
+3️⃣ ViewModel (Logic + State Owner)
+import Foundation
+
+@MainActor
+final class ProfileViewModel: ObservableObject {
+
+    @Published private(set) var state: ProfileState = .idle
+
+    private let service: ProfileServicing
+
+    init(service: ProfileServicing) {
+        self.service = service
+    }
+
+    func loadProfile() async {
+        state = .loading
+
+        do {
+            let profile = try await service.fetchProfile()
+            state = .loaded(profile)
+        } catch {
+            state = .error("Failed to load profile")
+        }
+    }
+}
+
+✅ ViewModel Responsibilities
+
+Owns state
+
+Runs business logic
+
+Handles async work
+
+No UI code
+
+4️⃣ Service Layer (Dependency Injection)
+protocol ProfileServicing {
+    func fetchProfile() async throws -> Profile
+}
+
+Concrete Implementation
+struct ProfileService: ProfileServicing {
+    func fetchProfile() async throws -> Profile {
+        try await Task.sleep(nanoseconds: 1_000_000_000)
+        return Profile(name: "Deepak", email: "deepak@example.com")
+    }
+}
+
+5️⃣ Model (Plain Data)
+struct Profile {
+    let name: String
+    let email: String
+}
+
+6️⃣ Dependency Injection (Production Setup)
+@main
+struct MyApp: App {
+
+    var body: some Scene {
+        WindowGroup {
+            NavigationStack {
+                ProfileView(
+                    viewModel: ProfileViewModel(
+                        service: ProfileService()
+                    )
+                )
+            }
+        }
+    }
+}
+
+
+👉 No singletons
+👉 No hidden dependencies
+👉 Easy to swap mocks
+
+7️⃣ Unit Testing the ViewModel
+final class MockProfileService: ProfileServicing {
+    func fetchProfile() async throws -> Profile {
+        Profile(name: "Test", email: "test@test.com")
+    }
+}
+
+func testProfileLoadedState() async {
+    let vm = ProfileViewModel(service: MockProfileService())
+
+    await vm.loadProfile()
+
+    if case .loaded(let profile) = vm.state {
+        XCTAssertEqual(profile.name, "Test")
+    } else {
+        XCTFail("Expected loaded state")
+    }
+}
+
+🧠 Why This MVVM Is Production-Grade
+
+✅ Explicit UI state
+✅ Async-safe (@MainActor)
+✅ Dependency-injected
+✅ Easy to test
+✅ Scales per feature
+✅ No logic in views
+✅ No massive ViewModels
+
+🚫 What This Template Avoids
+
+❌ Logic inside View
+
+❌ @ObservedObject ownership
+
+❌ Boolean flags like isLoading
+
+❌ Singleton services
+
+❌ Implicit dependencies
+
+❌ UIKit-style controllers
+
+⭐ Interview Power Answer
+
+If asked:
+
+“How do you structure SwiftUI MVVM?”
+
+Say:
+
+“I use feature-based MVVM with explicit UI states, async ViewModels, protocol-based services, and dependency injection. Views are pure renderers.”
+
+🔥 MVVM Golden Rules
+
+Views render, ViewModels decide
+
+State is explicit
+
+Async work lives in ViewModel
+
+Services are injected
+
+One feature = one ViewModel
+
+No side effects in body
