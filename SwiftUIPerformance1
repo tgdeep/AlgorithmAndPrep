@@ -1,0 +1,202 @@
+⚡ SwiftUI Performance Optimization (Day 1)
+
+SwiftUI is fast by design, but poor architecture can make it surprisingly slow.
+
+Most performance issues come from:
+
+Excessive body recomputation
+
+Incorrect state ownership
+
+Unstable view identity
+
+Overly complex view trees
+
+Understanding these patterns prevents laggy UIs and battery drain.
+
+🧠 Performance Mental Model
+
+SwiftUI works in three steps:
+
+State Change
+   ↓
+View Recalculation
+   ↓
+Diffing Engine
+   ↓
+UI Update
+
+Your job is to minimize unnecessary recalculations.
+
+1️⃣ Keep body Cheap
+❌ Anti-Pattern
+var body: some View {
+    let sorted = items.sorted()
+    return List(sorted) { item in
+        Text(item.name)
+    }
+}
+
+Sorting runs every render.
+
+✅ Correct
+@State private var sortedItems: [Item] = []
+
+.task {
+    sortedItems = items.sorted()
+}
+
+Now sorting runs once.
+
+2️⃣ Use Correct Property Wrappers
+
+SwiftUI performance depends heavily on state ownership.
+
+Wrapper	Impact
+@State	Local state
+@StateObject	Owns reference
+@ObservedObject	Observes external state
+@EnvironmentObject	Global invalidation
+❌ Performance Bug
+@ObservedObject var vm = MyViewModel()
+
+Recreated every render.
+
+✅ Correct
+@StateObject var vm = MyViewModel()
+
+Stable lifetime.
+
+3️⃣ Stable Identity Is Critical
+
+SwiftUI uses identity for diffing.
+
+❌ Bad
+ForEach(items, id: \.self)
+❌ Worse
+.id(UUID())
+
+This forces full view recreation.
+
+✅ Correct
+ForEach(items, id: \.id)
+
+Stable identity = minimal diffing.
+
+4️⃣ Prefer Lazy Containers
+❌ Bad
+VStack {
+    ForEach(items) { item in
+        ItemRow(item)
+    }
+}
+
+All views render immediately.
+
+✅ Correct
+LazyVStack {
+    ForEach(items) { item in
+        ItemRow(item)
+    }
+}
+
+Views render on demand.
+
+5️⃣ Avoid Large View Trees
+
+SwiftUI diffing cost grows with view complexity.
+
+❌ Bad
+VStack
+ └─ HStack
+     └─ ZStack
+         └─ VStack
+             └─ Text
+✅ Prefer Simpler Layout
+VStack
+ └─ Text
+
+Flat hierarchies perform better.
+
+6️⃣ Extract Subviews
+
+Large views cause:
+
+ViewBuilder explosions
+
+Poor diffing
+
+Slower compile times
+
+❌ Bad
+var body: some View {
+    VStack {
+        // 200 lines of UI
+    }
+}
+✅ Correct
+var body: some View {
+    VStack {
+        header
+        content
+        footer
+    }
+}
+7️⃣ Use .task Instead of .onAppear
+
+.task integrates with Swift concurrency.
+
+❌
+.onAppear {
+    loadData()
+}
+✅
+.task {
+    await loadData()
+}
+
+This prevents repeated work.
+
+8️⃣ Debugging Performance Issues
+
+Use these tools:
+
+Instruments
+SwiftUI → Body Updates
+Debug prints
+print("body recomputed")
+Xcode tools
+Debug → View Hierarchy
+🔥 Common SwiftUI Performance Mistakes
+
+Logic inside body
+
+Unstable IDs
+
+Overusing EnvironmentObject
+
+Heavy modifiers in lists
+
+Deep nested stacks
+
+🧠 Interview Power Answer
+
+If asked:
+
+“How do you optimize SwiftUI performance?”
+
+Answer:
+
+“I focus on minimizing body recomputation, ensuring stable view identity, using lazy containers for large lists, and keeping state ownership correct with StateObject.”
+
+⭐ Golden Performance Rules
+
+Keep body pure
+
+Stabilize identity
+
+Use lazy containers
+
+Own your ViewModels
+
+Flatten view trees
