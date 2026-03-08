@@ -1,0 +1,206 @@
+🧠 SwiftUI Memory Management & Retain Cycles (Day 2)
+
+SwiftUI removes much of UIKit’s lifecycle complexity, but memory management issues still exist.
+
+Common problems include:
+
+Retain cycles in closures
+
+Long-lived ObservableObjects
+
+Tasks that never cancel
+
+Incorrect state ownership
+
+Understanding these prevents memory leaks and zombie view models.
+
+1️⃣ SwiftUI Views Are Value Types
+
+SwiftUI views are structs.
+
+struct ProfileView: View {
+    var body: some View {
+        Text("Hello")
+    }
+}
+
+Because views are value types, they are:
+
+Cheap to recreate
+
+Not retained like UIKit controllers
+
+Not responsible for memory leaks
+
+Memory issues usually come from reference types.
+
+2️⃣ ViewModels Are Reference Types
+
+ViewModels are typically classes.
+
+final class ProfileViewModel: ObservableObject {
+    @Published var name = "Deepak"
+}
+
+These objects:
+
+Persist in memory
+
+Can create retain cycles
+
+Must be owned carefully
+
+This is why @StateObject exists.
+
+3️⃣ Using the Wrong Property Wrapper
+❌ Memory Bug
+@ObservedObject var vm = ProfileViewModel()
+
+This recreates the ViewModel repeatedly.
+
+It may also lead to unexpected retention patterns.
+
+✅ Correct Ownership
+@StateObject var vm = ProfileViewModel()
+
+Now the ViewModel lifecycle matches the view identity.
+
+4️⃣ Retain Cycles in Closures
+
+Swift closures capture self strongly by default.
+
+❌ Retain Cycle
+class ViewModel {
+
+    func load() {
+        service.fetch { result in
+            self.process(result)
+        }
+    }
+}
+
+If service retains the closure, the ViewModel never deallocates.
+
+✅ Correct
+service.fetch { [weak self] result in
+    self?.process(result)
+}
+
+This breaks the retain cycle.
+
+5️⃣ Retain Cycles in Combine
+
+Combine pipelines can retain ViewModels.
+
+❌
+publisher
+    .sink { value in
+        self.handle(value)
+    }
+    .store(in: &cancellables)
+✅
+publisher
+    .sink { [weak self] value in
+        self?.handle(value)
+    }
+    .store(in: &cancellables)
+6️⃣ Tasks That Never Cancel
+
+Swift concurrency introduces another memory trap.
+
+❌
+Task {
+    await loadData()
+}
+
+If the view disappears, the task may continue running.
+
+✅
+
+Use .task in SwiftUI.
+
+.task {
+    await loadData()
+}
+
+SwiftUI cancels the task automatically when the view disappears.
+
+7️⃣ Long-Lived EnvironmentObjects
+
+EnvironmentObject can accidentally become global singletons.
+
+❌
+.environmentObject(AppState())
+
+If AppState grows large, it causes:
+
+global invalidations
+
+unnecessary view updates
+
+high memory retention
+
+✅
+
+Split global state into smaller models.
+
+Example:
+
+AuthState
+UserSettings
+ThemeState
+8️⃣ Detecting Memory Leaks
+
+Use Xcode tools:
+
+Instruments
+Leaks
+Allocations
+Debug Memory Graph
+Debug → View Memory Graph
+
+This reveals retain cycles instantly.
+
+9️⃣ Debugging Deallocation
+
+Add deinit logs.
+
+deinit {
+    print("ProfileViewModel deallocated")
+}
+
+If this never prints, something is retaining it.
+
+🔥 Common SwiftUI Memory Mistakes
+
+Strong closure captures
+
+Combine pipelines without weak references
+
+Long-running Tasks
+
+Massive EnvironmentObjects
+
+Incorrect ViewModel ownership
+
+🧠 Interview Power Answer
+
+If asked:
+
+“Do SwiftUI apps still have memory leaks?”
+
+Answer:
+
+“Yes — but they usually come from reference types like ViewModels, Combine pipelines, or async tasks. SwiftUI views themselves are value types and rarely cause leaks.”
+
+⭐ Golden Memory Rules
+
+Views are value types
+
+ViewModels must be owned with StateObject
+
+Always weak-capture in closures
+
+Cancel long tasks
+
+Monitor EnvironmentObject size
