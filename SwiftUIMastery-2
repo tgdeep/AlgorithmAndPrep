@@ -1,0 +1,189 @@
+🧬 SwiftUI Property Wrappers Explained Internally (Day 2)
+
+SwiftUI property wrappers are not just syntax sugar — they define:
+
+state ownership
+
+lifecycle
+
+update propagation
+
+Most SwiftUI bugs come from misusing these wrappers.
+
+🧠 Mental Model
+
+Each property wrapper answers:
+
+Who owns the state?
+Who updates the UI?
+How long does it live?
+1️⃣ @State — Local Value State
+What it is
+
+Stored outside the view struct
+
+Managed by SwiftUI
+
+Tied to view identity
+
+@State private var count = 0
+Internal Behavior
+View struct recreated ❌
+State persists ✅
+
+SwiftUI stores the value in an internal storage system, not inside the struct.
+
+Use Case
+
+Simple UI state
+
+Local toggles
+
+Form inputs
+
+❌ Common Mistake
+var count = 0 // resets every render
+2️⃣ @StateObject — Ownership of Reference Type
+What it is
+
+Creates and owns a class instance
+
+Ensures single initialization
+
+@StateObject private var vm = ViewModel()
+Internal Behavior
+View recreated → ViewModel persists
+
+SwiftUI keeps the instance alive across re-renders.
+
+Use Case
+
+ViewModels
+
+Data controllers
+
+Long-lived objects
+
+❌ Critical Bug
+@ObservedObject var vm = ViewModel()
+
+This recreates the ViewModel repeatedly.
+
+3️⃣ @ObservedObject — External Observer
+What it is
+
+Observes an object created elsewhere
+
+Does NOT own lifecycle
+
+@ObservedObject var vm: ViewModel
+Internal Behavior
+View does NOT retain object
+External owner required
+Use Case
+
+Passing ViewModels down the hierarchy
+
+Child views
+
+Rule
+Parent → @StateObject
+Child → @ObservedObject
+4️⃣ @EnvironmentObject — Global Shared State
+What it is
+
+Injected dependency
+
+Available across the view tree
+
+@EnvironmentObject var session: Session
+Internal Behavior
+Looked up at runtime
+Crashes if missing
+Use Case
+
+Authentication state
+
+App-wide settings
+
+Theme management
+
+❌ Common Crash
+No ObservableObject found
+⚠️ Warning
+
+Too many EnvironmentObjects → performance issues
+
+5️⃣ Comparison Table (Interview Favorite)
+Wrapper	Owns State	Type	Lifecycle
+@State	Yes	Value	View identity
+@StateObject	Yes	Reference	Persistent
+@ObservedObject	No	Reference	External
+@EnvironmentObject	No	Reference	Global
+6️⃣ Update Flow
+
+When a wrapped value changes:
+
+State change → body recompute → diff → UI update
+
+Example:
+
+@Published var name: String
+
+Triggers:
+
+objectWillChange → SwiftUI update
+7️⃣ Most Common Bugs
+Bug 1 — ViewModel recreated
+@ObservedObject var vm = VM()
+Bug 2 — State resets
+.id(UUID())
+Bug 3 — UI not updating
+var name: String // missing @Published
+8️⃣ Advanced Insight
+
+SwiftUI stores state in an internal structure similar to:
+
+StateStorage[ViewIdentity][KeyPath]
+
+This is why:
+
+identity matters
+
+order of properties matters
+
+view hierarchy matters
+
+🧠 Interview Power Answer
+
+If asked:
+
+“What is the difference between StateObject and ObservedObject?”
+
+Answer:
+
+“StateObject owns and creates the instance, ensuring it persists across view updates, while ObservedObject only observes an externally created instance and does not manage its lifecycle.”
+
+⭐ Golden Rules
+
+Use @State for value types
+
+Use @StateObject for ownership
+
+Use @ObservedObject for passing down
+
+Use @EnvironmentObject sparingly
+
+Never create objects inside @ObservedObject
+
+✅ Day 2 Complete
+
+You now understand:
+
+Internal behavior of property wrappers
+
+Lifecycle differences
+
+State ownership rules
+
+Common bugs and fixes
