@@ -1,0 +1,177 @@
+🔄 SwiftUI Data Flow Explained (End-to-End) (Day 4)
+
+SwiftUI is completely driven by data flow.
+
+If you understand this, you understand:
+
+how UI updates happen
+where bugs come from
+how to design scalable apps
+🧠 The Core Principle
+UI = f(State)
+
+Your UI is a function of state.
+
+🔁 End-to-End Data Flow
+User Action
+   ↓
+View triggers ViewModel
+   ↓
+ViewModel updates state
+   ↓
+@Published emits change
+   ↓
+SwiftUI recomputes body
+   ↓
+UI updates
+1️⃣ Step-by-Step Example
+Step 1: User Action
+Button("Increment") {
+    viewModel.increment()
+}
+Step 2: ViewModel Updates State
+final class CounterViewModel: ObservableObject {
+    @Published var count = 0
+
+    func increment() {
+        count += 1
+    }
+}
+Step 3: SwiftUI Observes Changes
+@StateObject var viewModel = CounterViewModel()
+
+When count changes:
+
+objectWillChange → triggers UI update
+Step 4: Body Recomputes
+Text("Count: \(viewModel.count)")
+
+SwiftUI recomputes body.
+
+Step 5: Diffing + Rendering
+
+Only the changed part updates:
+
+Text updated → rest unchanged
+2️⃣ Data Flow Types
+
+SwiftUI supports multiple flows:
+
+Local State
+@State var isOn = false
+
+Flow:
+
+View → View
+ViewModel State
+@StateObject var vm = VM()
+
+Flow:
+
+View → ViewModel → View
+Parent → Child
+@Binding var value: Int
+
+Flow:
+
+Parent → Child → Parent
+Global State
+@EnvironmentObject var session: Session
+
+Flow:
+
+Global → Many Views
+3️⃣ Binding — Two-Way Data Flow
+TextField("Enter", text: $text)
+
+Binding means:
+
+View ↔ State
+
+Changes in UI update state and vice versa.
+
+4️⃣ One-Way Data Flow (Best Practice)
+
+Preferred architecture:
+
+View → Action → ViewModel → State → View
+
+Why?
+
+predictable
+testable
+scalable
+5️⃣ Common Data Flow Bugs
+❌ Bug 1 — State not updating UI
+var count = 0 // missing @Published
+❌ Bug 2 — ViewModel recreated
+@ObservedObject var vm = VM()
+❌ Bug 3 — Multiple sources of truth
+State duplicated in multiple places
+❌ Bug 4 — Wrong binding
+TextField(text: .constant(""))
+
+No real data flow.
+
+6️⃣ Single Source of Truth
+
+SwiftUI expects:
+
+One piece of state → one owner
+
+Example:
+
+@StateObject var vm = VM()
+
+Avoid duplicating:
+
+vm.count AND local count
+7️⃣ Advanced Flow (Production)
+View
+ ↓
+ViewModel
+ ↓
+Service Layer
+ ↓
+Network / DB
+ ↓
+Back to ViewModel
+ ↓
+UI update
+8️⃣ Why SwiftUI Feels Reactive
+
+Because of:
+
+@Published + Combine + Diffing engine
+
+Even without writing Combine manually, SwiftUI uses it internally.
+
+🧠 Interview Power Answer
+
+If asked:
+
+“How does data flow in SwiftUI?”
+
+Answer:
+
+“SwiftUI uses a unidirectional data flow where user actions trigger state changes in a ViewModel, and those changes propagate through property wrappers like @Published, causing the view to recompute and update.”
+
+🔥 Key Insight
+
+SwiftUI is not event-driven like UIKit.
+It is state-driven.
+
+⭐ Golden Rules
+UI depends on state
+State has a single source of truth
+Use bindings for two-way flow
+Prefer unidirectional flow
+Avoid duplicated state
+✅ Day 4 Complete
+
+You now understand:
+
+Full data lifecycle
+State propagation
+Binding mechanics
+Production data flow
