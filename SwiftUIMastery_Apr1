@@ -1,0 +1,185 @@
+📅 SwiftUI Interview Mastery Series
+SwiftUI vs UIKit — Deep Comparison ✅
+Property Wrappers Internals ✅
+some View and Opaque Types ✅
+SwiftUI Data Flow Explained ✅
+SwiftUI Concurrency Patterns (async/await in UI) ⬅️ Today
+Combine vs Async/Await
+View Lifecycle Internals
+NavigationStack Patterns
+Performance Debugging
+🔟 Interview Q&A
+⚡ SwiftUI Concurrency Patterns (Day 5)
+
+SwiftUI deeply integrates with Swift Concurrency (async/await).
+Most modern apps rely on:
+
+.task
+Task
+@MainActor
+cancellation
+structured concurrency
+
+This is a high-priority interview topic.
+
+🧠 Core Principle
+Async work should follow the lifecycle of the View
+
+SwiftUI gives you tools to tie async work to UI lifecycle automatically.
+
+1️⃣ .task — The Correct Way
+Example
+struct ContentView: View {
+
+    var body: some View {
+        Text("Loading...")
+            .task {
+                await fetchData()
+            }
+    }
+}
+Why .task is powerful
+- Runs when view appears
+- Cancels automatically when view disappears
+- Supports async/await
+2️⃣ .onAppear vs .task
+❌ .onAppear
+.onAppear {
+    loadData() // not cancellable
+}
+✅ .task
+.task {
+    await loadData()
+}
+Key Difference
+.task → lifecycle-aware + cancellable  
+.onAppear → fire-and-forget
+3️⃣ @MainActor — UI Safety
+
+UI updates must happen on the main thread.
+
+@MainActor
+final class ViewModel: ObservableObject {
+    @Published var data: String = ""
+}
+Why this matters
+
+Prevents:
+
+Publishing changes from background thread crash
+4️⃣ Cancellation (Very Important)
+
+SwiftUI cancels tasks automatically.
+
+.task {
+    await fetchData()
+}
+
+If the view disappears:
+
+Task is cancelled automatically
+Manual cancellation check
+func fetchData() async {
+    guard !Task.isCancelled else { return }
+
+    // continue work
+}
+5️⃣ Using Task {} — When Needed
+Example
+Button("Load") {
+    Task {
+        await fetchData()
+    }
+}
+When to use
+user-triggered actions
+button taps
+retry logic
+⚠️ Danger
+Task {} is NOT lifecycle-bound
+6️⃣ Structured Concurrency
+Parallel execution
+async let a = fetchA()
+async let b = fetchB()
+
+let result = await (a, b)
+Benefits
+faster execution
+clean syntax
+no callback hell
+7️⃣ Common Concurrency Bugs
+❌ Bug 1 — Updating UI off main thread
+DispatchQueue.global().async {
+    self.label = "Hello" // crash
+}
+❌ Bug 2 — Using unowned self in async
+Task {
+    [unowned self] in // ❌ crash risk
+}
+❌ Bug 3 — Ignoring cancellation
+await fetchData() // continues even if view gone
+❌ Bug 4 — Multiple overlapping tasks
+Multiple API calls triggered unintentionally
+8️⃣ Best Practice Pattern
+.task {
+    await viewModel.load()
+}
+
+ViewModel:
+
+@MainActor
+func load() async {
+    state = .loading
+
+    do {
+        let data = try await service.fetch()
+        state = .loaded(data)
+    } catch {
+        state = .error
+    }
+}
+9️⃣ Debouncing / Task Cancellation Pattern
+.task(id: searchText) {
+    try? await Task.sleep(nanoseconds: 300_000_000)
+
+    guard !Task.isCancelled else { return }
+
+    await search()
+}
+
+Used for:
+
+search bars
+live filtering
+🔥 Advanced Insight
+
+SwiftUI uses:
+
+Structured concurrency + automatic cancellation
+
+This is why .task is preferred.
+
+🧠 Interview Power Answer
+
+If asked:
+
+“How do you handle async work in SwiftUI?”
+
+Answer:
+
+“I use .task for lifecycle-bound async work, Task {} for user-triggered actions, ensure ViewModels are @MainActor, and handle cancellation properly.”
+
+⭐ Golden Rules
+Prefer .task over .onAppear
+Use @MainActor for UI updates
+Handle cancellation
+Avoid unowned in async
+Use structured concurrency
+✅ Day 5 Complete
+
+You now understand:
+
+.task vs Task
+cancellation model
+async patterns in SwiftUI
+concurrency pitfalls
