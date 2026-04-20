@@ -1,0 +1,147 @@
+🔄 Combine vs Async/Await in SwiftUI (Day 6)
+
+SwiftUI supports two async paradigms:
+
+Combine (Reactive streams)
+Async/Await (Structured concurrency)
+
+A common interview question is:
+
+“Which one should you use and when?”
+
+🧠 Core Difference
+Combine
+Event stream based (Publisher → Subscriber)
+Async/Await
+Sequential async code (like sync code)
+1️⃣ Basic Comparison
+	Combine	Async/Await
+Style	Reactive	Sequential
+Complexity	Higher	Lower
+Learning curve	Steep	Easy
+Cancellation	Manual	Built-in
+Readability	Lower	High
+2️⃣ Combine Example
+publisher
+    .sink { value in
+        print(value)
+    }
+    .store(in: &cancellables)
+
+This is a continuous stream.
+
+3️⃣ Async/Await Example
+func load() async {
+    let data = await fetch()
+    print(data)
+}
+
+This is a single async operation.
+
+4️⃣ When to Use Async/Await ✅
+
+Use async/await for:
+
+API calls
+One-time data fetch
+User-triggered actions
+Simple workflows
+
+Example:
+
+.task {
+    await viewModel.load()
+}
+5️⃣ When to Use Combine ✅
+
+Use Combine for:
+
+Continuous data streams
+Observing changes
+Real-time updates
+Complex event pipelines
+
+Example:
+
+$text
+    .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+    .sink { value in
+        search(value)
+    }
+6️⃣ SwiftUI Internally Uses Combine
+
+Even if you don’t use it directly:
+
+@Published
+
+Uses Combine under the hood.
+
+7️⃣ Bridging Between Them
+Combine → Async
+let value = try await publisher.values.first
+Async → Combine
+Future { promise in
+    Task {
+        let result = await fetch()
+        promise(.success(result))
+    }
+}
+8️⃣ Cancellation Comparison
+Combine
+cancellable.cancel()
+Async/Await
+Task {
+    await load()
+}.cancel()
+
+SwiftUI also auto-cancels .task.
+
+9️⃣ Real-World Pattern (Best Practice)
+
+Modern SwiftUI apps:
+
+View → async/await
+ViewModel → async/await
+State updates → Combine (@Published)
+
+👉 Hybrid approach
+
+🔥 Common Mistakes
+Overusing Combine for simple tasks
+Mixing both unnecessarily
+Ignoring cancellation
+Writing complex Combine chains unnecessarily
+🧠 Interview Power Answer
+
+If asked:
+
+“Should we still use Combine in SwiftUI?”
+
+Answer:
+
+“Yes, but primarily for reactive streams. For most async operations, I prefer async/await because it’s simpler and integrates better with SwiftUI.”
+
+⭐ Decision Rule
+Single async task → async/await  
+Continuous stream → Combine
+💡 Senior-Level Insight
+
+Async/Await replaced many Combine use cases, but Combine is still essential for event streams and reactive pipelines.
+
+✅ Day 6 Complete
+
+You now understand:
+
+Differences between Combine and async/await
+When to use each
+How they work together
+
+📌 Next check-in:
+
+SwiftUI View Lifecycle Internals
+
+This explains:
+
+Why body runs multiple times  
+When views are created/destroyed  
+How SwiftUI manages lifecycle
