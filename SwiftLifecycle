@@ -1,0 +1,180 @@
+🔄 SwiftUI View Lifecycle Internals (Day 7)
+
+SwiftUI does not follow UIKit lifecycle (viewDidLoad, viewWillAppear, etc.).
+
+Instead, it uses a state-driven lifecycle.
+
+Understanding this explains:
+
+why body runs multiple times
+when views are created/destroyed
+why side effects can misfire
+🧠 Core Principle
+Views are ephemeral  
+State is persistent
+
+SwiftUI recreates views frequently, but preserves state using identity.
+
+1️⃣ View Creation vs Persistence
+UIKit
+ViewController created once → lives in memory
+SwiftUI
+View struct recreated many times
+State persists separately
+Example
+struct MyView: View {
+
+    init() {
+        print("init called")
+    }
+
+    var body: some View {
+        Text("Hello")
+    }
+}
+
+👉 init may run multiple times.
+
+2️⃣ Why body Runs Frequently
+var body: some View {
+    print("body recomputed")
+    return Text("Hello")
+}
+
+Triggers:
+
+state change
+parent update
+environment change
+Key Insight
+Frequent body recomputation is NORMAL
+3️⃣ Lifecycle Hooks in SwiftUI
+
+Instead of UIKit methods, SwiftUI provides:
+
+.onAppear
+.onAppear {
+    print("appeared")
+}
+
+Called when the view becomes visible.
+
+.onDisappear
+.onDisappear {
+    print("disappeared")
+}
+
+Called when removed from screen.
+
+.task
+.task {
+    await loadData()
+}
+
+Lifecycle-aware async hook.
+
+4️⃣ .onAppear vs .task
+	.onAppear	.task
+Async support	❌	✅
+Cancellation	❌	✅
+Lifecycle aware	Partial	Full
+5️⃣ View Identity Controls Lifecycle
+MyView()
+.id(UUID())
+
+This forces:
+
+New identity → new lifecycle
+
+Effects:
+
+init called again
+state resets
+.onAppear triggers again
+6️⃣ Parent-Child Lifecycle
+
+When a parent updates:
+
+ParentView {
+    ChildView()
+}
+
+SwiftUI may:
+
+Recreate ChildView even if unchanged
+
+But state remains if identity is stable.
+
+7️⃣ Common Lifecycle Bugs
+❌ Bug 1 — API called multiple times
+.onAppear {
+    fetchData()
+}
+
+Cause:
+
+View appears multiple times
+✅ Fix
+.task {
+    await fetchData()
+}
+❌ Bug 2 — State resets unexpectedly
+
+Cause:
+
+Identity changed
+❌ Bug 3 — Side effects in body
+var body: some View {
+    fetchData() // ❌
+}
+8️⃣ When Views Are Destroyed
+
+SwiftUI destroys views when:
+
+removed from hierarchy
+navigation pops
+identity changes
+9️⃣ Debugging Lifecycle
+
+Add logs:
+
+init {
+    print("init")
+}
+
+deinit {
+    print("deinit")
+}
+
+And:
+
+print("body")
+
+This reveals lifecycle patterns.
+
+🔥 Key Insight
+SwiftUI lifecycle is driven by data, not events
+🧠 Interview Power Answer
+
+If asked:
+
+“Why does SwiftUI call body multiple times?”
+
+Answer:
+
+“Because SwiftUI recalculates the view hierarchy whenever state changes. Since views are value types, this is cheap and expected.”
+
+⭐ Golden Rules
+Views are temporary
+State is persistent
+Avoid side effects in body
+Use .task for async work
+Identity controls lifecycle
+✅ Day 7 Complete
+
+You now understand:
+
+SwiftUI lifecycle model
+View creation vs state persistence
+Lifecycle hooks
+Common bugs
