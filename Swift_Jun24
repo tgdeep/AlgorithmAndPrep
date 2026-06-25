@@ -1,0 +1,254 @@
+SwiftUI Interview Mastery Series
+SwiftUI vs UIKit — Deep Comparison ✅
+Property Wrappers Internals ✅
+some View and Opaque Types ✅
+SwiftUI Data Flow Explained ✅
+SwiftUI Concurrency Patterns ✅
+Combine vs Async/Await ✅
+View Lifecycle Internals ✅
+Advanced NavigationStack Patterns ⬅️ Today
+Performance Debugging
+Common SwiftUI Interview Q&A
+🧭 Advanced NavigationStack Patterns
+
+NavigationStack introduced in iOS 16 changed SwiftUI navigation from view-driven to data-driven.
+
+Instead of pushing views directly, you push values that represent destinations.
+
+This approach makes navigation:
+
+Predictable
+Testable
+Deep-link friendly
+🧠 Navigation Mental Model
+
+UIKit:
+
+ViewController
+      ↓
+pushViewController()
+
+SwiftUI:
+
+Navigation State
+        ↓
+NavigationStack
+        ↓
+Destination View
+
+Navigation becomes state, not an action.
+
+1️⃣ Value-Based Navigation
+
+Instead of pushing views:
+
+NavigationLink("Profile") {
+    ProfileView()
+}
+
+Prefer value-based navigation:
+
+NavigationLink(
+    "Profile",
+    value: AppRoute.profile(id: "123")
+)
+
+Destination mapping:
+
+.navigationDestination(for: AppRoute.self) { route in
+    switch route {
+    case .profile(let id):
+        ProfileView(userId: id)
+
+    case .settings:
+        SettingsView()
+    }
+}
+2️⃣ Strongly Typed Routes
+
+Avoid strings.
+
+❌
+navigate("profile")
+✅
+enum AppRoute: Hashable {
+    case home
+    case profile(id: String)
+    case settings
+}
+
+Benefits:
+
+Compile-time safety
+Easier refactoring
+Cleaner deep links
+3️⃣ Programmatic Navigation
+
+Navigation is just modifying the path.
+
+@State private var path: [AppRoute] = []
+
+Navigate:
+
+path.append(.profile(id: "123"))
+
+Pop:
+
+path.removeLast()
+
+Pop to root:
+
+path.removeAll()
+4️⃣ Deep Linking
+
+Incoming URL:
+
+myapp://profile/123
+
+Convert it into navigation state:
+
+path = [
+    .profile(id: "123")
+]
+
+The UI updates automatically.
+
+5️⃣ Multi-Step Navigation
+
+You can build an entire flow with one path.
+
+path = [
+    .home,
+    .profile(id: "123"),
+    .settings
+]
+
+SwiftUI reconstructs the entire navigation stack.
+
+Perfect for:
+
+Checkout flows
+Onboarding
+Wizards
+6️⃣ Navigation Coordinator Pattern
+
+Instead of letting views push screens:
+
+Button("Go") {
+    path.append(.profile(id: "123"))
+}
+
+Use a coordinator:
+
+@MainActor
+final class AppCoordinator: ObservableObject {
+
+    @Published var path: [AppRoute] = []
+
+    func showProfile(id: String) {
+        path.append(.profile(id: id))
+    }
+}
+
+Benefits:
+
+Testable navigation
+Centralized flow
+Cleaner views
+7️⃣ Preserving Navigation State
+
+Because navigation is data:
+
+@SceneStorage("navigation")
+private var savedPath: Data?
+
+You can restore navigation after:
+
+App restart
+Scene recreation
+
+This improves user experience in multi-window and background scenarios.
+
+8️⃣ Common Navigation Mistakes
+❌ Mixing Multiple Navigation APIs
+
+Avoid mixing:
+
+NavigationLink(destination:)
+NavigationLink(value:)
+Manual path mutation
+
+Choose one consistent style.
+
+❌ Putting Business Logic in Views
+Button("Login") {
+    authenticate()
+    path.append(.dashboard)
+}
+
+Move navigation decisions into the ViewModel or Coordinator.
+
+❌ Mutating the Path From Multiple Places
+
+If several views modify the same path, debugging becomes difficult.
+
+Prefer a single navigation owner.
+
+9️⃣ Debugging Navigation
+
+Log every path update.
+
+.onChange(of: path) { newPath in
+    print("Navigation Path:", newPath)
+}
+
+This quickly reveals:
+
+Duplicate pushes
+Unexpected pops
+Incorrect routes
+🔟 Interview Scenario
+
+Question:
+
+"How would you implement deep linking in SwiftUI?"
+
+Answer:
+
+"I model navigation using a typed route enum and a NavigationStack path. Incoming URLs are converted into route values, which populate the navigation path. SwiftUI reconstructs the stack automatically, making deep links predictable and easy to test."
+
+🔥 Common Production Pitfalls
+Duplicate routes pushed onto the stack
+Losing navigation state after app relaunch
+Navigating from child views instead of a coordinator
+Using strings instead of typed routes
+Multiple sources of navigation truth
+⭐ Golden Rules
+Navigation is state
+Use typed routes
+Prefer value-based navigation
+Centralize navigation logic
+Keep navigation testable
+✅ Day 8 Complete
+
+You now understand:
+
+Value-based navigation
+Deep linking
+Multi-step navigation
+Coordinator integration
+Navigation debugging
+
+📌 Next check-in:
+
+🚀 SwiftUI Performance Debugging
+
+You'll learn how to diagnose:
+
+Excessive body recomputation
+Slow scrolling
+Identity-related performance issues
+Instruments workflow
+Real-world optimization techniques
+
+This is one of the most practical topics for production SwiftUI apps and a favorite in senior-level interviews.
